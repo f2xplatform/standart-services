@@ -1,0 +1,54 @@
+{
+  "request_params_id": [
+    {
+      "stage": [
+        {
+          "descr": "Проверка на корректность работы стандартного метода",
+          "defaults": {
+            "url": { "req_id": "request_params_id" }
+          },
+          "result": {
+            "status": 200,
+            "include": "/std/requests/:re"
+          }
+        }
+      ],
+      "main": [
+        {
+          "descr": "Проверка на корректность работы стандартного метода",
+          "defaults": {
+            "url": { "req_id": "request_params_id" }
+          },
+          "result": {
+            "status": 200,
+            "include": "/std/requests/:re"
+          }
+        }
+      ]
+    }
+  ],
+  "all_requests_id": [
+    {
+      "stage": [
+        {
+          "descr": "Проверка на получение описания поддерживаемых запросов",
+          "defaults": {},
+          "result": {
+            "status": 200,
+            "include": "/std/requests"
+          }
+        }
+      ],
+      "main": [
+        {
+          "descr": "Проверка на получение описания поддерживаемых запросов",
+          "defaults": {},
+          "result": {
+            "status": 200,
+            "include": "/std/requests"
+          }
+        }
+      ]
+    }
+  ]
+}

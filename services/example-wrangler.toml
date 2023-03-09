@@ -1,0 +1,37 @@
+name = "worker-name"
+main = "src/index.ts"
+compatibility_date = "2022-01-27"
+keep_vars = false
+workers_dev = false
+
+[env.main]
+name="worker-name"
+kv_namespaces = [
+  { binding = "kv_env", id = "14535a2ec17042b39fb8b25edb92a806" }
+]
+vars = {TRACE="1", INSTANCE="main"}
+services = [
+    { binding = "", service = ""}
+]
+queues.producers=[
+ {queue = "trace-queue", binding = "q_trace" },
+ {queue = "exception-queue", binding = "q_exception" },
+ #{queue = "access-queue", binding = "q_access" } for THTTPService classes
+]
+triggers.crons = [""]
+
+[env.stage]
+name="worker-name"
+kv_namespaces = [
+ { binding = "kv_env", id = "d55b362c9fa144a89cfcceda6b7c0b13" }
+]
+vars = {TRACE="1", INSTANCE="stage"}
+services = [
+    { binding = "", service = ""}
+]
+queues.producers=[
+ {queue = "trace-queue", binding = "q_trace" },
+ {queue = "exception-queue", binding = "q_exception" },
+ #{queue = "access-queue", binding = "q_access" } for THTTPService classes
+]
+triggers.crons = [""]
