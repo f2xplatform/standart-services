@@ -1,0 +1,25 @@
+{
+	"compilerOptions": {
+		"target": "es2015",
+		"lib": [
+			"esnext"
+		],
+		"module": "esnext",
+		"moduleResolution": "node",
+		"types": [
+			"@cloudflare/workers-types",
+			// "jest"
+		],
+		"resolveJsonModule": true ,
+		"allowJs": true ,
+		"checkJs": false ,
+		"noEmit": true,
+		"skipLibCheck": true,
+		"esModuleInterop": true,
+		"isolatedModules": true,
+		"allowSyntheticDefaultImports": true,
+		"forceConsistentCasingInFileNames": true,
+		"strict": true,
+    	"noFallthroughCasesInSwitch": true,
+	}
+}
