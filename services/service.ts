@@ -253,6 +253,7 @@ abstract class TBaseService {
       time: new Date(Date.now()).toISOString(),
       error: error,
       message: this.maskInfo(message),
+      trace: this.trace
     };
     await this.q_trace.send(result);
   }
