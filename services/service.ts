@@ -136,7 +136,12 @@ abstract class TBaseService {
       requestBody: requestBody,
     };
     if (this.trace === 2) {
-      message.requestHeaders = requestHeaders;
+      message = {
+        requestURL: requestURL,
+        requestMethod: requestMethod,
+        requestHeaders: requestHeaders,
+        requestBody: requestBody,
+      }
     }
     return JSON.stringify(message, null, 2);
   }
@@ -188,7 +193,12 @@ abstract class TBaseService {
       responseBody: responseBody,
     };
     if (this.trace === 2) {
-      message.responseHeaders = responseHeaders;
+      message = {
+        url: responseUrl,
+        responseStatus: responseStatus,
+        responseHeaders:responseHeaders,
+        responseBody: responseBody,
+      }
     }
     return JSON.stringify(message, null, 2);
   }
