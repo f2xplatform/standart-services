@@ -86,7 +86,8 @@ abstract class TBaseService {
   protected generateHttpInit(
     method: string,
     body?: BodyInit,
-    additionalHeaders?: {}
+    additionalHeaders?: {},
+    cf?: RequestInitCfProperties
   ) {
     let headers = {
       "Content-Type": "application/json",
@@ -97,18 +98,20 @@ abstract class TBaseService {
       headers = Object.assign(headers, additionalHeaders);
     }
 
-    if (body) {
-      return {
-        body: body,
-        method: method,
-        headers: headers,
-      };
-    } else {
-      return {
-        method: method,
-        headers: headers,
-      };
+    let init : {method: string, headers: {}, body?: BodyInit, cf?: RequestInitCfProperties} = {
+      method: method,
+      headers: headers,
     }
+
+    if(body) {
+      init.body = body
+    };
+    
+    if(cf) {
+      init.cf = cf
+    };
+
+    return init;
   }
 
   protected maskInfo(str: string) {
@@ -136,7 +139,12 @@ abstract class TBaseService {
       requestBody: requestBody,
     };
     if (this.trace === 2) {
-      message.requestHeaders = requestHeaders;
+      message = {
+        requestURL: requestURL,
+        requestMethod: requestMethod,
+        requestHeaders: requestHeaders,
+        requestBody: requestBody,
+      }
     }
     return JSON.stringify(message, null, 2);
   }
@@ -188,7 +196,12 @@ abstract class TBaseService {
       responseBody: responseBody,
     };
     if (this.trace === 2) {
-      message.responseHeaders = responseHeaders;
+      message = {
+        url: responseUrl,
+        responseStatus: responseStatus,
+        responseHeaders:responseHeaders,
+        responseBody: responseBody,
+      }
     }
     return JSON.stringify(message, null, 2);
   }
@@ -208,10 +221,10 @@ abstract class TBaseService {
     return await response.json();
   }
 
-  async callHttp(url: string, method: string, params?: BodyInit, headers?: {}) {
+  async callHttp(url: string, method: string, params?: BodyInit, headers?: {}, cf?: RequestInitCfProperties) {
     let request = new Request(
       url,
-      this.generateHttpInit(method, params, headers)
+      this.generateHttpInit(method, params, headers, cf)
     );
     if (this.trace) {
       let reqMessage = await this.getTraceMessageHttpRequest(request);
@@ -243,6 +256,7 @@ abstract class TBaseService {
       time: new Date(Date.now()).toISOString(),
       error: error,
       message: this.maskInfo(message),
+      trace: this.trace
     };
     await this.q_trace.send(result);
   }
