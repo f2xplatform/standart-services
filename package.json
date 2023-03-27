@@ -1,10 +1,10 @@
 {
   "name": "standart-services",
-  "version": "0.0.0",
+  "version": "0.0.2",
   "scripts": {
     "dev": "npx wrangler dev",
     "publish": "npx wrangler publish",
-    "version": "npm run build && git add -A dist",
+    "version": "git add -A",
     "postversion": "git push && git push --tags && rm -rf build/temp"
   },
   "dependencies": {
