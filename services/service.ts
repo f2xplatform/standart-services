@@ -154,8 +154,10 @@ abstract class TBaseService {
   async getKVParam(kvKey: string, cryptoPass?: string) {
     let value: string;
     if (cryptoPass) {
-      let result = await this.getKVParamWithMetadata(kvKey, cryptoPass)
-      value = result.value;
+      let result = await this.getKVParamWithMetadata(kvKey, cryptoPass);
+      if (result && result.value) {
+        value = result.value;
+      }
     } else {
       value = await this.kv_env.get(this.name + "_" + kvKey);
     }
@@ -167,7 +169,7 @@ abstract class TBaseService {
       value: string;
       metadata: { [key: string]: any };
     } = await this.kv_env.getWithMetadata(this.name + "_" + kvKey);
-    if (cryptoPass) {
+    if (cryptoPass && result.value && result.metadata && result.metadata.iv) {
       result.value = this.bufferToString(
         await this.decrypt(
           result.value,
