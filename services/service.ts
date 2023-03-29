@@ -152,41 +152,56 @@ abstract class TBaseService {
   }
 
   async getKVParam(kvKey: string, cryptoPass?: string) {
-    let value:string;
+    let value: string;
     if (cryptoPass) {
-      let result: {
-        value: string | null;
-        metadata: { iv: string } | null;
-      } = await this.kv_env.getWithMetadata(this.name + "_" + kvKey);
-      if (result.value && result.metadata) {
-        value = this.bufferToString(await this.decrypt(
-          result.value,
-          kvKey,
-          this.stringToBuffer(result.metadata.iv),
-          cryptoPass
-        ));
-      }
+      let result = await this.getKVParamWithMetadata(kvKey, cryptoPass)
+      value = result.value;
     } else {
       value = await this.kv_env.get(this.name + "_" + kvKey);
     }
     return value;
-  } 
+  }
+
+  async getKVParamWithMetadata(kvKey: string, cryptoPass?: string) {
+    let result: {
+      value: string;
+      metadata: { [key: string]: any };
+    } = await this.kv_env.getWithMetadata(this.name + "_" + kvKey);
+    if (cryptoPass) {
+      result.value = this.bufferToString(
+        await this.decrypt(
+          result.value,
+          kvKey,
+          this.stringToBuffer(result.metadata.iv),
+          cryptoPass
+        )
+      );
+    }
+    return result;
+  }
 
   async setKVParam(
     kvKey: string,
     kvValue: string,
     expirationInSeconds?: number,
+    metadata?: {},
     cryptoPass?: string
   ) {
     let params: { [key: string]: any } = {};
-    let encryptedValue;
+    if (metadata) {
+      params.metadata = metadata;
+    }
     if (expirationInSeconds !== undefined && expirationInSeconds >= 0) {
       params.expirationTtl = expirationInSeconds;
     }
     if (cryptoPass) {
       let iv = crypto.getRandomValues(new Uint8Array(12));
-      encryptedValue = await this.encrypt(kvValue, kvKey, iv, cryptoPass);
-      params.metadata = { iv:  this.bufferToString(iv) };
+      let encryptedValue = await this.encrypt(kvValue, kvKey, iv, cryptoPass);
+      if (params.metadata) {
+        params.metadata.iv = this.bufferToString(iv);
+      } else {
+        params.metadata = { iv: this.bufferToString(iv) };
+      }
       await this.kv_env.put(
         this.name + "_" + kvKey,
         this.bufferToString(encryptedValue),
@@ -331,7 +346,7 @@ abstract class TBaseService {
     url: string,
     method: string,
     params?: BodyInit,
-    headers?:{}
+    headers?: {}
   ): Promise<any> {
     let service = env[name] as Fetcher;
     let response = await service.fetch(
