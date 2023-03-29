@@ -156,13 +156,13 @@ abstract class TBaseService {
     if (cryptoPass) {
       let result: {
         value: string | null;
-        metadata: { iv: Uint8Array } | null;
+        metadata: { iv: string } | null;
       } = await this.kv_env.getWithMetadata(this.name + "_" + kvKey);
       if (result.value && result.metadata) {
         value = this.bufferToString(await this.decrypt(
           result.value,
           kvKey,
-          result.metadata.iv,
+          this.stringToBuffer(result.metadata.iv),
           cryptoPass
         ));
       }
@@ -186,7 +186,7 @@ abstract class TBaseService {
     if (cryptoPass) {
       let iv = crypto.getRandomValues(new Uint8Array(12));
       encryptedValue = await this.encrypt(kvValue, kvKey, iv, cryptoPass);
-      params.metadata = { iv: iv };
+      params.metadata = { iv:  this.bufferToString(iv) };
       await this.kv_env.put(
         this.name + "_" + kvKey,
         this.bufferToString(encryptedValue),
