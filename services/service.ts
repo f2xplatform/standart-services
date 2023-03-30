@@ -1,5 +1,13 @@
 import * as testSettings from "./commonTestSettings.json";
 
+export const SUB_REQUEST_HEADERS_ARRAY = [
+  "cf-connecting-ip",
+  "cf-ipcountry",
+  "x-real-ip",
+  "x-requested-with",
+  "user-agent",
+];
+
 export interface IQueueEnv {}
 export interface IBindingEnv {}
 
@@ -65,21 +73,144 @@ abstract class TBaseService {
     this._exception = Number(exception);
   }
 
-  async getKVParam(kvKey: string) {
-    return await this.kv_env.get(this.name + "_" + kvKey);
+  private stringToBuffer(str: string) {
+    var bufView = new Uint8Array(str.length);
+    for (var i = 0, strLen = str.length; i < strLen; i++) {
+      bufView[i] = str.charCodeAt(i);
+    }
+    return bufView;
+  }
+
+  private bufferToString(buf: ArrayBuffer) {
+    return String.fromCharCode.apply(null, new Uint8Array(buf));
+  }
+
+  private async encrypt(
+    kvValue: string,
+    kvKey: string,
+    iv: Uint8Array,
+    cryptoPass: string
+  ) {
+    const keyMaterial = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(cryptoPass),
+      "PBKDF2",
+      false,
+      ["deriveBits", "deriveKey"]
+    );
+    const salt = this.stringToBuffer(kvKey);
+    const plaintext = this.stringToBuffer(kvValue);
+    const key = await crypto.subtle.deriveKey(
+      {
+        name: "PBKDF2",
+        salt,
+        iterations: 100,
+        hash: "SHA-256",
+      },
+      keyMaterial,
+      { name: "AES-GCM", length: 256 },
+      true,
+      ["encrypt", "decrypt"]
+    );
+
+    return await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
+  }
+
+  private async decrypt(
+    kvValue: string,
+    kvKey: string,
+    iv: Uint8Array,
+    cryptoPass: string
+  ) {
+    const keyMaterial = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(cryptoPass),
+      "PBKDF2",
+      false,
+      ["deriveBits", "deriveKey"]
+    );
+    const salt = this.stringToBuffer(kvKey);
+    const ciphertext = this.stringToBuffer(kvValue);
+    const key = await crypto.subtle.deriveKey(
+      {
+        name: "PBKDF2",
+        salt,
+        iterations: 100,
+        hash: "SHA-256",
+      },
+      keyMaterial,
+      { name: "AES-GCM", length: 256 },
+      true,
+      ["encrypt", "decrypt"]
+    );
+
+    return await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv },
+      key,
+      ciphertext
+    );
+  }
+
+  async getKVParam(kvKey: string, cryptoPass?: string) {
+    let value: string;
+    if (cryptoPass) {
+      let result = await this.getKVParamWithMetadata(kvKey, cryptoPass);
+      if (result?.value) {
+        value = result.value;
+      }
+    } else {
+      value = await this.kv_env.get(this.name + "_" + kvKey);
+    }
+    return value;
+  }
+
+  async getKVParamWithMetadata(kvKey: string, cryptoPass?: string) {
+    let result: {
+      value: string;
+      metadata: { [key: string]: any };
+    } = await this.kv_env.getWithMetadata(this.name + "_" + kvKey);
+    if (cryptoPass && result.value && result?.metadata?.iv) {
+      result.value = this.bufferToString(
+        await this.decrypt(
+          result.value,
+          kvKey,
+          this.stringToBuffer(result.metadata.iv),
+          cryptoPass
+        )
+      );
+    }
+    return result;
   }
 
   async setKVParam(
     kvKey: string,
     kvValue: string,
-    expirationInSeconds?: number
+    expirationInSeconds?: number,
+    metadata?: {},
+    cryptoPass?: string
   ) {
-    if (expirationInSeconds !== undefined && expirationInSeconds >= 0) {
-      await this.kv_env.put(this.name + "_" + kvKey, kvValue, {
-        expirationTtl: expirationInSeconds,
-      });
+    let params: { [key: string]: any } = {};
+    if (metadata) {
+      params.metadata = metadata;
+    }
+    if (expirationInSeconds !== undefined && expirationInSeconds >= 60) {
+      params.expirationTtl = expirationInSeconds;
+    }
+    if (cryptoPass) {
+      let iv = crypto.getRandomValues(new Uint8Array(12));
+      let encryptedValue = await this.encrypt(kvValue, kvKey, iv, cryptoPass);
+      if (params.metadata) {
+        params.metadata.iv = this.bufferToString(iv);
+      } else {
+        params.metadata = { iv: this.bufferToString(iv) };
+      }
+      await this.kv_env.put(
+        this.name + "_" + kvKey,
+        this.bufferToString(encryptedValue),
+        params
+      );
     } else {
-      await this.kv_env.put(this.name + "_" + kvKey, kvValue);
+      await this.kv_env.put(this.name + "_" + kvKey, kvValue, params);
     }
   }
 
@@ -98,18 +229,23 @@ abstract class TBaseService {
       headers = Object.assign(headers, additionalHeaders);
     }
 
-    let init : {method: string, headers: {}, body?: BodyInit, cf?: RequestInitCfProperties} = {
+    let init: {
+      method: string;
+      headers: {};
+      body?: BodyInit;
+      cf?: RequestInitCfProperties;
+    } = {
       method: method,
       headers: headers,
+    };
+
+    if (body) {
+      init.body = body;
     }
 
-    if(body) {
-      init.body = body
-    };
-    
-    if(cf) {
-      init.cf = cf
-    };
+    if (cf) {
+      init.cf = cf;
+    }
 
     return init;
   }
@@ -144,12 +280,12 @@ abstract class TBaseService {
         requestMethod: requestMethod,
         requestHeaders: requestHeaders,
         requestBody: requestBody,
-      }
+      };
     }
     return JSON.stringify(message, null, 2);
   }
 
-  async getExceptionMessage(exception: any, url: string, body: any) {
+  protected async getExceptionMessage(exception: any, url: string, body: any) {
     let exceptionMessage: {
       url: string;
       body: any;
@@ -199,9 +335,9 @@ abstract class TBaseService {
       message = {
         url: responseUrl,
         responseStatus: responseStatus,
-        responseHeaders:responseHeaders,
+        responseHeaders: responseHeaders,
         responseBody: responseBody,
-      }
+      };
     }
     return JSON.stringify(message, null, 2);
   }
@@ -211,17 +347,24 @@ abstract class TBaseService {
     name: keyof IBindingEnv,
     url: string,
     method: string,
-    params?: BodyInit
+    params?: BodyInit,
+    headers?: {}
   ): Promise<any> {
     let service = env[name] as Fetcher;
     let response = await service.fetch(
       `https://${name}/${url}`,
-      this.generateHttpInit(method, params)
+      this.generateHttpInit(method, params, headers)
     );
     return await response.json();
   }
 
-  async callHttp(url: string, method: string, params?: BodyInit, headers?: {}, cf?: RequestInitCfProperties) {
+  async callHttp(
+    url: string,
+    method: string,
+    params?: BodyInit,
+    headers?: {},
+    cf?: RequestInitCfProperties
+  ) {
     let request = new Request(
       url,
       this.generateHttpInit(method, params, headers, cf)
@@ -256,7 +399,7 @@ abstract class TBaseService {
       time: new Date(Date.now()).toISOString(),
       error: error,
       message: this.maskInfo(message),
-      trace: this.trace
+      trace: this.trace,
     };
     await this.q_trace.send(result);
   }
@@ -297,6 +440,43 @@ export abstract class THttpService extends TBaseService {
     super(env, name);
     this.q_access = env.q_access;
     this.requestUrlPatterns = [] as Array<TRequestUrlPattern>;
+  }
+
+  async callHttp(
+    url: string,
+    method: string,
+    params?: BodyInit,
+    headers?: {},
+    cf?: RequestInitCfProperties
+  ) {
+    let filteredHeaders = Object.entries(this.requestHttpParams.headers).filter(
+      (head) => {
+        if (SUB_REQUEST_HEADERS_ARRAY.includes(head[0])) {
+          return head;
+        }
+      }
+    );
+    let newHeaders = Object.assign({}, headers, filteredHeaders);
+    return await super.callHttp(url, method, params, newHeaders, cf);
+  }
+
+  async callService(
+    env: IBaseServiceEnv,
+    name: keyof IBindingEnv,
+    url: string,
+    method: string,
+    params?: BodyInit,
+    headers?: {}
+  ): Promise<any> {
+    let filteredHeaders = Object.entries(this.requestHttpParams.headers).filter(
+      (head) => {
+        if (SUB_REQUEST_HEADERS_ARRAY.includes(head[0])) {
+          return head;
+        }
+      }
+    );
+    let newHeaders = Object.assign({}, headers, filteredHeaders);
+    return await super.callService(env, name, url, method, params, newHeaders);
   }
 
   get requestUrlPatterns(): Array<TRequestUrlPattern> {
@@ -378,7 +558,7 @@ export abstract class THttpService extends TBaseService {
     };
     return result;
   }
-  
+
   protected getRequestParams(
     env: IHttpServiceEnv,
     pattern: TRequestUrlPattern,
@@ -397,7 +577,7 @@ export abstract class THttpService extends TBaseService {
           descr: request.descr,
           url: `https://${this.name}${request.pathname}`,
           method: request.method,
-          test: request.test
+          test: request.test,
         },
       };
 
