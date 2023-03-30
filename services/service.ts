@@ -73,7 +73,7 @@ abstract class TBaseService {
     this._exception = Number(exception);
   }
 
-  stringToBuffer(str: string) {
+  private stringToBuffer(str: string) {
     var bufView = new Uint8Array(str.length);
     for (var i = 0, strLen = str.length; i < strLen; i++) {
       bufView[i] = str.charCodeAt(i);
@@ -81,11 +81,11 @@ abstract class TBaseService {
     return bufView;
   }
 
-  bufferToString(buf: ArrayBuffer) {
+  private bufferToString(buf: ArrayBuffer) {
     return String.fromCharCode.apply(null, new Uint8Array(buf));
   }
 
-  async encrypt(
+  private async encrypt(
     kvValue: string,
     kvKey: string,
     iv: Uint8Array,
@@ -116,7 +116,7 @@ abstract class TBaseService {
     return await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
   }
 
-  async decrypt(
+  private async decrypt(
     kvValue: string,
     kvKey: string,
     iv: Uint8Array,
@@ -155,7 +155,7 @@ abstract class TBaseService {
     let value: string;
     if (cryptoPass) {
       let result = await this.getKVParamWithMetadata(kvKey, cryptoPass);
-      if (result && result.value) {
+      if (result?.value) {
         value = result.value;
       }
     } else {
@@ -169,7 +169,7 @@ abstract class TBaseService {
       value: string;
       metadata: { [key: string]: any };
     } = await this.kv_env.getWithMetadata(this.name + "_" + kvKey);
-    if (cryptoPass && result.value && result.metadata && result.metadata.iv) {
+    if (cryptoPass && result.value && result?.metadata?.iv) {
       result.value = this.bufferToString(
         await this.decrypt(
           result.value,
@@ -193,7 +193,7 @@ abstract class TBaseService {
     if (metadata) {
       params.metadata = metadata;
     }
-    if (expirationInSeconds !== undefined && expirationInSeconds >= 0) {
+    if (expirationInSeconds !== undefined && expirationInSeconds >= 60) {
       params.expirationTtl = expirationInSeconds;
     }
     if (cryptoPass) {
@@ -285,7 +285,7 @@ abstract class TBaseService {
     return JSON.stringify(message, null, 2);
   }
 
-  async getExceptionMessage(exception: any, url: string, body: any) {
+  protected async getExceptionMessage(exception: any, url: string, body: any) {
     let exceptionMessage: {
       url: string;
       body: any;

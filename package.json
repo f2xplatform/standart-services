@@ -3,9 +3,7 @@
   "version": "0.0.3",
   "scripts": {
     "dev": "npx wrangler dev",
-    "publish": "npx wrangler publish",
-    "version": "git add -A",
-    "postversion": "git push && git push --tags && rm -rf build/temp"
+    "publish": "npx wrangler publish"
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20230307.0"
