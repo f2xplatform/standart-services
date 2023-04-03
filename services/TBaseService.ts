@@ -204,6 +204,10 @@ export abstract class TBaseService {
     }
   }
 
+  async deleteKVParam(kvKey: string) {
+    await this.kv_env.delete(kvKey);
+  }
+
   protected generateHttpInit(
     method: string,
     body?: BodyInit,
