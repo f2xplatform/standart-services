@@ -64,8 +64,8 @@ export abstract class TBaseService {
   }
 
   private stringToBuffer(str: string) {
-    var bufView = new Uint8Array(str.length);
-    for (var i = 0, strLen = str.length; i < strLen; i++) {
+    let bufView = new Uint8Array(str.length);
+    for (let i = 0, strLen = str.length; i < strLen; i++) {
       bufView[i] = str.charCodeAt(i);
     }
     return bufView;
