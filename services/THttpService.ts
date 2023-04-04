@@ -1,5 +1,5 @@
 import { IBaseServiceEnv, IBindingEnv, TBaseService } from "./TBaseService";
-import * as testSettings from "./commonTestSettings.json";
+import * as testSettings from "./HttpServiceTestSettings.json";
 
 export const SUB_REQUEST_HEADERS_ARRAY = [
   "cf-connecting-ip",
