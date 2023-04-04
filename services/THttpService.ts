@@ -17,8 +17,8 @@ export type TRequestHttpParams = {
   url: string;
   method: string;
   ip: string;
-  body: {};
-  headers: {};
+  body: string;
+  headers: {[key:string]:string};
 };
 
 export type TRequestUrlPattern = {
