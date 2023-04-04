@@ -208,6 +208,23 @@ export abstract class TBaseService {
     await this.kv_env.delete(this.name + "_" + kvKey);
   }
 
+  async getKVList(prefix?: string, limit?: number, cursor?: string) {
+    let params: { prefix?: string; limit?: number; cursor?: string } = {};
+    if (prefix) {
+      params.prefix = prefix;
+    }
+    if (limit) {
+      params.limit = limit;
+    }
+    if (cursor) {
+      params.cursor = cursor;
+    }
+    if (Object.keys(params).length) {
+      return await this.kv_env.list(params);
+    }
+    return await this.kv_env.list();
+  }
+
   protected generateHttpInit(
     method: string,
     body?: BodyInit,
