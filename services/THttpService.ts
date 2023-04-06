@@ -106,7 +106,7 @@ export abstract class THttpService extends TBaseService {
     ];
   }
 
-  async init(request: Request) {
+  async init(request: Request, env?:IHttpServiceEnv) {
     const requestClone = request.clone();
     this.requestHttpParams = {
       method: request.method.toLowerCase(),
