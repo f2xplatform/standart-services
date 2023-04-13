@@ -35,7 +35,7 @@ export abstract class THttpService extends TBaseService {
   private _requestUrlPatterns: Array<TRequestUrlPattern> =
     {} as Array<TRequestUrlPattern>;
   protected readonly q_access: Queue;
-  abstract getSecretFromRequest()
+  abstract getSecretFromRequest(secret?:string)
 
   constructor(env: IHttpServiceEnv, name: string) {
     super(env, name);
@@ -107,8 +107,8 @@ export abstract class THttpService extends TBaseService {
     ];
   }
 
-  async init(request: Request) {
-    this.getSecretFromRequest()
+  async init(request: Request, secret?:string) {
+    await this.getSecretFromRequest(secret)
     const requestClone = request.clone();
     this.requestHttpParams = {
       method: request.method.toLowerCase(),
