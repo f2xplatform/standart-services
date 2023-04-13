@@ -35,7 +35,7 @@ export abstract class THttpService extends TBaseService {
   private _requestUrlPatterns: Array<TRequestUrlPattern> =
     {} as Array<TRequestUrlPattern>;
   protected readonly q_access: Queue;
-  abstract getSecretFromRequest(secret?:string)
+  abstract getSecretFromRequest()
 
   constructor(env: IHttpServiceEnv, name: string) {
     super(env, name);
@@ -107,8 +107,7 @@ export abstract class THttpService extends TBaseService {
     ];
   }
 
-  async init(request: Request, secret?:string) {
-    await this.getSecretFromRequest(secret)
+  async init(request: Request) {
     const requestClone = request.clone();
     this.requestHttpParams = {
       method: request.method.toLowerCase(),
@@ -129,6 +128,8 @@ export abstract class THttpService extends TBaseService {
     ) {
       this.trace = request.headers.get("f2x_trace")!;
     }
+
+    await this.getSecretFromRequest();
 
     if (this.trace) {
       let message = await this.getTraceMessageHttpRequest(request);
