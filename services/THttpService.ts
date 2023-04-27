@@ -231,7 +231,7 @@ export abstract class THttpService extends TBaseService {
             result.responseError?.code ? result.responseError?.code : `API_ERROR`,
             result.responseError?.message ? result.responseError?.message : `Exception on ${this.requestHttpParams.url}`,
             result.responseError?.errorTrace ? result.responseError?.errorTrace : result,
-            result.responseError?.errorData ? result.responseError?.errorData : result
+            result.responseError?.errorData ? result.responseError?.errorData : null
           );
         }
 
