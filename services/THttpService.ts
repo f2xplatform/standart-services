@@ -225,7 +225,7 @@ export abstract class THttpService extends TBaseService {
           pattern,
           this.requestHttpParams
         );
-        if (result?.responseError && Object.keys(result?.responseError.length)) {
+        if (result?.responseError && Object.keys(result?.responseError).length) {
           return await this.generateResponseError(
             result.responseStatus,
             result.responseError?.code ? result.responseError?.code : `API_ERROR`,
