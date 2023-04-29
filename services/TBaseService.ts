@@ -272,30 +272,30 @@ export abstract class TBaseService {
     cryptoPass?: string
   ): Promise<any> {
     try {
-      let request = new Request(`v1/kv/${key}`, this.generateHttpInit("GET"));
+      let request = new Request(`v1/kv`, this.generateHttpInit("GET"));
       let response = await stub.fetch(request);
-      let result: {
-        key: string;
-        value: string;
-        expire?: number;
-        meta?: { [key: string]: any };
-      } = await response.json();
+      if (response.status === 200) {
+        let result: {
+          key: string;
+          value: string;
+          expire?: number;
+          meta?: { [key: string]: any };
+        } = await response.json();
 
-      if (!result) {
+        if (cryptoPass && result.value && result?.meta?.iv) {
+          result.value = this.bufferToString(
+            await this.decrypt(
+              result.value,
+              key,
+              this.stringToBuffer(result.meta.iv),
+              cryptoPass
+            )
+          );
+        }
+        return result;
+      } else {
         return undefined;
       }
-
-      if (cryptoPass && result.value && result?.meta?.iv) {
-        result.value = this.bufferToString(
-          await this.decrypt(
-            result.value,
-            key,
-            this.stringToBuffer(result.meta.iv),
-            cryptoPass
-          )
-        );
-      }
-      return result;
     } catch {
       return undefined;
     }
@@ -306,13 +306,22 @@ export abstract class TBaseService {
     key: string,
     cryptoPass?: string
   ): Promise<any> {
-    let result = await this.getDurableKVParamWithMetadata(stub, key, cryptoPass);
-    if(result?.metadata) {
-      delete result.metadata
-    }
-    return result;
+    let {value} = await this.getDurableKVParamWithMetadata(
+      stub,
+      key,
+      cryptoPass
+    );
+    return value;
   }
 
+  async deleteDurableKVParamWithMetadata(
+    stub: DurableObject
+  ): Promise<any> {
+      let request = new Request(`v1/kv`, this.generateHttpInit("DELETE"));
+      let response = await stub.fetch(request);
+      let result = await response.json();
+      return result;
+  }
 
   protected generateHttpInit(
     method: string,

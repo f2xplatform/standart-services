@@ -1,28 +1,12 @@
-export interface IDurableKVEnv {}
+import { IBaseServiceEnv } from "./TBaseService";
 
 export class TDurableKV {
-  protected key: string;
-  protected value: string;
-  protected expire: number;
-  protected meta: { [key: string]: any };
   private readonly state: DurableObjectState;
-  private env: IDurableKVEnv;
+  private env: IBaseServiceEnv;
 
-  constructor(env: IDurableKVEnv, state: DurableObjectState) {
+  constructor(env: IBaseServiceEnv, state: DurableObjectState) {
     this.state = state;
     this.env = env;
-    this.state.blockConcurrencyWhile(async () => {
-      let stored: {
-        key: string;
-        value: string;
-        expire: number;
-        meta: { [key: string]: any };
-      } = await this.state.storage.get("all");
-      this.key = stored?.key;
-      this.value = stored?.value;
-      this.expire = stored?.expire;
-      this.meta = stored?.meta;
-    });
   }
 
   async fetch(req: Request) {
@@ -31,15 +15,13 @@ export class TDurableKV {
         return await this.handleGetRequest(req);
       case "POST":
         return await this.handlePostRequest(req);
+      case "DELETE":
+        return await this.handleDeleteRequest(req);
     }
   }
 
   async alarm() {
     await this.state.storage.delete("all");
-    this.key = null;
-    this.value = null;
-    this.expire = null;
-    this.meta = null;
   }
 
   private async handleGetRequest(req: Request) {
@@ -48,7 +30,7 @@ export class TDurableKV {
       return new Response(
         JSON.stringify({
           responseStatus: 404,
-          responseError: "Not found",
+          responseError: { errorCode: "NOT_FOUND", errorText: "Not found" },
           responseResult: null,
         })
       );
@@ -64,7 +46,7 @@ export class TDurableKV {
   }
 
   private async handlePostRequest(req: Request) {
-    const reqBody: { [key: string]: any } = await req.clone().json();
+    const reqBody: { [key: string]: any } = await req.json();
     await this.state.storage.put("all", reqBody);
     if (reqBody?.expire) {
       await this.state.storage.setAlarm(Date.now() + reqBody.expire);
@@ -74,6 +56,17 @@ export class TDurableKV {
         responseStatus: 200,
         responseError: null,
         responseResult: reqBody,
+      })
+    );
+  }
+
+  private async handleDeleteRequest(req: Request) {
+    await this.state.storage.delete("all");
+    return new Response(
+      JSON.stringify({
+        responseStatus: 200,
+        responseError: null,
+        responseResult: "DELETE SUCCESS",
       })
     );
   }
