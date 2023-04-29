@@ -311,10 +311,7 @@ export abstract class TBaseService {
       key,
       cryptoPass
     );
-    if (!result?.value) {
-      return undefined;
-    } 
-    return result.value;
+    return result?.value;
   }
 
   async deleteDurableKVParamWithMetadata(
