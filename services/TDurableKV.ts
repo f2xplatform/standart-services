@@ -1,8 +1,8 @@
 export interface IDurableEnv {}
 
 export class TDurableKV {
-  private readonly state: DurableObjectState;
-  private env: IDurableEnv;
+  readonly state: DurableObjectState;
+  env: IDurableEnv;
 
   constructor(env: IDurableEnv, state: DurableObjectState) {
     this.state = state;
