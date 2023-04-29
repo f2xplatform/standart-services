@@ -24,7 +24,7 @@ export class TDurableKV {
     await this.state.storage.delete("all");
   }
 
-  private async handleGetRequest(req: Request) {
+ async handleGetRequest(req: Request) {
     let result = await this.state.storage.get("all");
     if (!result) {
       return new Response(
