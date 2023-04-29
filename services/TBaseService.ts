@@ -225,6 +225,104 @@ export abstract class TBaseService {
     return await this.kv_env.list();
   }
 
+  async setDurableKVParam(
+    stub: DurableObject,
+    key: string,
+    value: string,
+    expire?: number,
+    meta?: { [key: string]: any },
+    cryptoPass?: string
+  ): Promise<any> {
+    let params: {
+      key: string;
+      value: string;
+      expire?: number;
+      meta?: { [key: string]: any };
+    } = {
+      key: key,
+      value: value,
+      meta: meta,
+    };
+
+    if (expire !== undefined && expire >= 60) {
+      params.expire = expire;
+    }
+
+    if (cryptoPass) {
+      let iv = crypto.getRandomValues(new Uint8Array(12));
+      let encryptedValue = await this.encrypt(value, key, iv, cryptoPass);
+      params.value = this.bufferToString(encryptedValue);
+      if (meta) {
+        meta.iv = this.bufferToString(iv);
+      } else {
+        meta = { iv: this.bufferToString(iv) };
+      }
+    }
+    let request = new Request(
+      "v1/kv",
+      this.generateHttpInit("POST", JSON.stringify(params))
+    );
+    let response = await stub.fetch(request);
+    return await response.json();
+  }
+
+  async getDurableKVParamWithMetadata(
+    stub: DurableObject,
+    key: string,
+    cryptoPass?: string
+  ): Promise<any> {
+    try {
+      let request = new Request(`v1/kv`, this.generateHttpInit("GET"));
+      let response = await stub.fetch(request);
+      if (response.status === 200) {
+        let result: {
+          key: string;
+          value: string;
+          expire?: number;
+          meta?: { [key: string]: any };
+        } = await response.json();
+
+        if (cryptoPass && result.value && result?.meta?.iv) {
+          result.value = this.bufferToString(
+            await this.decrypt(
+              result.value,
+              key,
+              this.stringToBuffer(result.meta.iv),
+              cryptoPass
+            )
+          );
+        }
+        return result;
+      } else {
+        return undefined;
+      }
+    } catch {
+      return undefined;
+    }
+  }
+
+  async getDurableKVParam(
+    stub: DurableObject,
+    key: string,
+    cryptoPass?: string
+  ): Promise<any> {
+    let result = await this.getDurableKVParamWithMetadata(
+      stub,
+      key,
+      cryptoPass
+    );
+    return result?.value;
+  }
+
+  async deleteDurableKVParamWithMetadata(
+    stub: DurableObject
+  ): Promise<any> {
+      let request = new Request(`v1/kv`, this.generateHttpInit("DELETE"));
+      let response = await stub.fetch(request);
+      let result = await response.json();
+      return result;
+  }
+
   protected generateHttpInit(
     method: string,
     body?: BodyInit,
