@@ -1,10 +1,10 @@
-import { IBaseServiceEnv } from "./TBaseService";
+export interface IDurableEnv {}
 
 export class TDurableKV {
   private readonly state: DurableObjectState;
-  private env: IBaseServiceEnv;
+  private env: IDurableEnv;
 
-  constructor(env: IBaseServiceEnv, state: DurableObjectState) {
+  constructor(env: IDurableEnv, state: DurableObjectState) {
     this.state = state;
     this.env = env;
   }
@@ -62,6 +62,7 @@ export class TDurableKV {
 
   private async handleDeleteRequest(req: Request) {
     await this.state.storage.delete("all");
+    await this.state.storage.deleteAlarm();
     return new Response(
       JSON.stringify({
         responseStatus: 200,

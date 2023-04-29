@@ -306,12 +306,15 @@ export abstract class TBaseService {
     key: string,
     cryptoPass?: string
   ): Promise<any> {
-    let {value} = await this.getDurableKVParamWithMetadata(
+    let result = await this.getDurableKVParamWithMetadata(
       stub,
       key,
       cryptoPass
     );
-    return value;
+    if (!result?.value) {
+      return undefined;
+    } 
+    return result.value;
   }
 
   async deleteDurableKVParamWithMetadata(
