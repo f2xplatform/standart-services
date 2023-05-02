@@ -1,4 +1,6 @@
-export interface IDurableEnv {}
+export interface IDurableEnv {
+  CRYPTOPASS?:string
+}
 
 export class TDurableKV {
   readonly state: DurableObjectState;
