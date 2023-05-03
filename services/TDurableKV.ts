@@ -51,7 +51,7 @@ export class TDurableKV {
     const reqBody: { [key: string]: any } = await req.json();
     await this.state.storage.put("all", reqBody);
     if (reqBody?.expire) {
-      await this.state.storage.setAlarm(Date.now() + reqBody.expire);
+      await this.state.storage.setAlarm(Date.now() + reqBody.expire * 1000);
     }
     return new Response(
       JSON.stringify({
