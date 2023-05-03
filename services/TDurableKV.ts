@@ -3,12 +3,12 @@ export interface IDurableEnv {
 }
 
 export class TDurableKV {
-  env: IDurableEnv;
   readonly state: DurableObjectState;
+  env: IDurableEnv;
 
-  constructor(env: IDurableEnv, state: DurableObjectState) {
-    this.env = env;
+  constructor(state: DurableObjectState, env: IDurableEnv) {
     this.state = state;
+    this.env = env;
   }
 
   async fetch(req: Request) {
