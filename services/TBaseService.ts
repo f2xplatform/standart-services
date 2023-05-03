@@ -244,7 +244,7 @@ export abstract class TBaseService {
       meta: meta,
     };
 
-    if (expire !== undefined && expire >= 60) {
+    if (expire !== undefined) {
       params.expire = expire;
     }
 
