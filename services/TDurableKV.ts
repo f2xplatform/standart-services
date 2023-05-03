@@ -1,14 +1,14 @@
 export interface IDurableEnv {
-  CRYPTOPASS?:string
+  CRYPTOPASS?: string;
 }
 
 export class TDurableKV {
-  readonly state: DurableObjectState;
   env: IDurableEnv;
+  readonly state: DurableObjectState;
 
   constructor(env: IDurableEnv, state: DurableObjectState) {
-    this.state = state;
     this.env = env;
+    this.state = state;
   }
 
   async fetch(req: Request) {
@@ -26,7 +26,7 @@ export class TDurableKV {
     await this.state.storage.delete("all");
   }
 
- async handleGetRequest(req: Request) {
+  async handleGetRequest(req: Request) {
     let result = await this.state.storage.get("all");
     if (!result) {
       return new Response(
