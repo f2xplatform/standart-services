@@ -259,7 +259,7 @@ export abstract class TBaseService {
       }
     }
     let request = new Request(
-      "v1/kv",
+      "https://v1/kv",
       this.generateHttpInit("POST", JSON.stringify(params))
     );
     let response = await stub.fetch(request);
@@ -272,7 +272,7 @@ export abstract class TBaseService {
     cryptoPass?: string
   ): Promise<any> {
     try {
-      let request = new Request(`v1/kv`, this.generateHttpInit("GET"));
+      let request = new Request("https://v1/kv", this.generateHttpInit("GET"));
       let response = await stub.fetch(request);
       if (response.status === 200) {
         let result: {
@@ -314,13 +314,11 @@ export abstract class TBaseService {
     return result?.value;
   }
 
-  async deleteDurableKVParamWithMetadata(
-    stub: DurableObject
-  ): Promise<any> {
-      let request = new Request(`v1/kv`, this.generateHttpInit("DELETE"));
-      let response = await stub.fetch(request);
-      let result = await response.json();
-      return result;
+  async deleteDurableKVParamWithMetadata(stub: DurableObject): Promise<any> {
+    let request = new Request("https://v1/kv", this.generateHttpInit("DELETE"));
+    let response = await stub.fetch(request);
+    let result = await response.json();
+    return result;
   }
 
   protected generateHttpInit(
