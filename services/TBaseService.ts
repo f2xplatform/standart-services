@@ -1,3 +1,5 @@
+import { bufferToString, decrypt, stringToBuffer, encrypt } from "./utils";
+
 export interface IQueueEnv {}
 export interface IBindingEnv {}
 
@@ -63,84 +65,6 @@ export abstract class TBaseService {
     this._exception = Number(exception);
   }
 
-  private stringToBuffer(str: string) {
-    let bufView = new Uint8Array(str.length);
-    for (let i = 0, strLen = str.length; i < strLen; i++) {
-      bufView[i] = str.charCodeAt(i);
-    }
-    return bufView;
-  }
-
-  private bufferToString(buf: ArrayBuffer) {
-    return String.fromCharCode.apply(null, new Uint8Array(buf));
-  }
-
-  private async encrypt(
-    kvValue: string,
-    kvKey: string,
-    iv: Uint8Array,
-    cryptoPass: string
-  ) {
-    const keyMaterial = await crypto.subtle.importKey(
-      "raw",
-      new TextEncoder().encode(cryptoPass),
-      "PBKDF2",
-      false,
-      ["deriveBits", "deriveKey"]
-    );
-    const salt = this.stringToBuffer(kvKey);
-    const plaintext = this.stringToBuffer(kvValue);
-    const key = await crypto.subtle.deriveKey(
-      {
-        name: "PBKDF2",
-        salt,
-        iterations: 100,
-        hash: "SHA-256",
-      },
-      keyMaterial,
-      { name: "AES-GCM", length: 256 },
-      true,
-      ["encrypt", "decrypt"]
-    );
-
-    return await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
-  }
-
-  private async decrypt(
-    kvValue: string,
-    kvKey: string,
-    iv: Uint8Array,
-    cryptoPass: string
-  ) {
-    const keyMaterial = await crypto.subtle.importKey(
-      "raw",
-      new TextEncoder().encode(cryptoPass),
-      "PBKDF2",
-      false,
-      ["deriveBits", "deriveKey"]
-    );
-    const salt = this.stringToBuffer(kvKey);
-    const ciphertext = this.stringToBuffer(kvValue);
-    const key = await crypto.subtle.deriveKey(
-      {
-        name: "PBKDF2",
-        salt,
-        iterations: 100,
-        hash: "SHA-256",
-      },
-      keyMaterial,
-      { name: "AES-GCM", length: 256 },
-      true,
-      ["encrypt", "decrypt"]
-    );
-
-    return await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv },
-      key,
-      ciphertext
-    );
-  }
-
   async getKVParam(kvKey: string, cryptoPass?: string) {
     let value: string;
     if (cryptoPass) {
@@ -160,11 +84,11 @@ export abstract class TBaseService {
       metadata: { [key: string]: any };
     } = await this.kv_env.getWithMetadata(this.name + "_" + kvKey);
     if (cryptoPass && result.value && result?.metadata?.iv) {
-      result.value = this.bufferToString(
-        await this.decrypt(
+      result.value = bufferToString(
+        await decrypt(
           result.value,
           kvKey,
-          this.stringToBuffer(result.metadata.iv),
+          stringToBuffer(result.metadata.iv),
           cryptoPass
         )
       );
@@ -188,15 +112,15 @@ export abstract class TBaseService {
     }
     if (cryptoPass) {
       let iv = crypto.getRandomValues(new Uint8Array(12));
-      let encryptedValue = await this.encrypt(kvValue, kvKey, iv, cryptoPass);
+      let encryptedValue = await encrypt(kvValue, kvKey, iv, cryptoPass);
       if (params.metadata) {
-        params.metadata.iv = this.bufferToString(iv);
+        params.metadata.iv = bufferToString(iv);
       } else {
-        params.metadata = { iv: this.bufferToString(iv) };
+        params.metadata = { iv: bufferToString(iv) };
       }
       await this.kv_env.put(
         this.name + "_" + kvKey,
-        this.bufferToString(encryptedValue),
+        bufferToString(encryptedValue),
         params
       );
     } else {
@@ -229,33 +153,30 @@ export abstract class TBaseService {
     stub: DurableObject,
     key: string,
     value: string,
-    expire?: number,
+    expire: number,
     meta?: { [key: string]: any },
     cryptoPass?: string
   ): Promise<any> {
     let params: {
       key: string;
       value: string;
-      expire?: number;
+      expire: number;
       meta?: { [key: string]: any };
     } = {
       key: key,
       value: value,
       meta: meta,
+      expire: expire
     };
-
-    if (expire !== undefined) {
-      params.expire = expire;
-    }
 
     if (cryptoPass) {
       let iv = crypto.getRandomValues(new Uint8Array(12));
-      let encryptedValue = await this.encrypt(value, key, iv, cryptoPass);
-      params.value = this.bufferToString(encryptedValue);
+      let encryptedValue = await encrypt(value, key, iv, cryptoPass);
+      params.value = bufferToString(encryptedValue);
       if (meta) {
-        meta.iv = this.bufferToString(iv);
+        meta.iv = bufferToString(iv);
       } else {
-        meta = { iv: this.bufferToString(iv) };
+        meta = { iv: bufferToString(iv) };
       }
     }
     let request = new Request(
@@ -283,11 +204,11 @@ export abstract class TBaseService {
         } = await response.json();
 
         if (cryptoPass && result.value && result?.meta?.iv) {
-          result.value = this.bufferToString(
-            await this.decrypt(
+          result.value = bufferToString(
+            await decrypt(
               result.value,
               key,
-              this.stringToBuffer(result.meta.iv),
+              stringToBuffer(result.meta.iv),
               cryptoPass
             )
           );
