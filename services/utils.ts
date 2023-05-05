@@ -23,8 +23,8 @@ export async function encrypt(
     false,
     ["deriveBits", "deriveKey"]
   );
-  const salt = this.stringToBuffer(kvKey);
-  const plaintext = this.stringToBuffer(kvValue);
+  const salt = stringToBuffer(kvKey);
+  const plaintext = stringToBuffer(kvValue);
   const key = await crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
@@ -54,8 +54,8 @@ export async function decrypt(
     false,
     ["deriveBits", "deriveKey"]
   );
-  const salt = this.stringToBuffer(kvKey);
-  const ciphertext = this.stringToBuffer(kvValue);
+  const salt = stringToBuffer(kvKey);
+  const ciphertext = stringToBuffer(kvValue);
   const key = await crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
