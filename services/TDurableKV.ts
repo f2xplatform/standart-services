@@ -1,10 +1,10 @@
 export interface IDurableEnv {}
 
 export class TDurableKV {
-  private readonly state: DurableObjectState;
-  private env: IDurableEnv;
+  readonly state: DurableObjectState;
+  env: IDurableEnv;
 
-  constructor(env: IDurableEnv, state: DurableObjectState) {
+  constructor(state: DurableObjectState, env: IDurableEnv) {
     this.state = state;
     this.env = env;
   }
@@ -24,7 +24,7 @@ export class TDurableKV {
     await this.state.storage.delete("all");
   }
 
-  private async handleGetRequest(req: Request) {
+  protected async handleGetRequest(req: Request) {
     let result = await this.state.storage.get("all");
     if (!result) {
       return new Response(
@@ -45,11 +45,11 @@ export class TDurableKV {
     }
   }
 
-  private async handlePostRequest(req: Request) {
+  protected async handlePostRequest(req: Request) {
     const reqBody: { [key: string]: any } = await req.json();
     await this.state.storage.put("all", reqBody);
     if (reqBody?.expire) {
-      await this.state.storage.setAlarm(Date.now() + reqBody.expire);
+      await this.state.storage.setAlarm(Date.now() + reqBody.expire * 1000);
     }
     return new Response(
       JSON.stringify({
@@ -60,7 +60,7 @@ export class TDurableKV {
     );
   }
 
-  private async handleDeleteRequest(req: Request) {
+  protected async handleDeleteRequest(req: Request) {
     await this.state.storage.delete("all");
     await this.state.storage.deleteAlarm();
     return new Response(
