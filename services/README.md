@@ -3,7 +3,7 @@
 The file "services.ts" includes a description of abstract classes for microservices.
 There are 3 abstract classes from which classes are extended for implementation: t
 
--THttpService --- for http request processing services
+-THttpService --- for http request processing services  
 -TCronService -- for scheduled services  
 -TQueueService -- for queue processing services
 
@@ -20,7 +20,12 @@ Created class instance you need to save it to the "env" with "srv" property from
 ### Common methods:
 
 -getKVParam (get value from KV by key)  
--setKVParam (write value by key)  
+-getKVParamWithMetadata (get value and metadata from KV by key)  
+-setKVParam (write value to KV by key)  
+-deleteKVParam (delete value from KV by key)  
+-setDurableKVParam (write value to Durable Object by stub)  
+-getDurableKVParam (get value from Durable Object by stub)  
+-getDurableKVParamWithMetadata (get value and metadata from Durable Object by stub)  
 -callService (calling and answering on bound microservices)  
 -callHttp (calling and answering external request)  
 -sendQueue (send to queue)
@@ -28,16 +33,16 @@ Created class instance you need to save it to the "env" with "srv" property from
 ### THttpService methods:
 
 -generateResponseError (to generate response with error)  
--generateResponseOK (to generate response with error)
+-generateResponseOK (to generate response with error)  
 
 ### TCronService methods:
 
--traceCronStop (for sending message about cron stop to the q_trace)
+-traceCronStop (for sending message about cron stop to the q_trace)  
 
 ### TQueueService methods:
 
--traceQueueStop (for sending message about cron stop to the q_trace)
--handleQMessage(queue message handler)
+-traceQueueStop (for sending message about cron stop to the q_trace)  
+-handleQMessage(queue message handler)  
 
 There are 2 queues:
 
@@ -54,3 +59,12 @@ message: string (formed request/response message)
 Id and trace can be sent in headers and checked for presence. If these properties are not in the headers, new ones are generated (id - randomly, trace - from env). If there is a trace in the header - compare the trace from the header and the trace from env and take into account the greater value.
 
 All requests are sent to the access-queue unconditionally.
+
+### TDurableKV methods:
+
+-fetch (to communicate with a Durable Object)  
+-alarm (to perform an action when an alarm occurs)  
+
+To access an Durable Object call methods setDurableKVParam, getDurableKVParam, getDurableKVParamWithMetadata. The "stub" parameter of these methods is obtained as follows:
+let id = env.$durableObjectBinding$.idFromName($key$);
+let stub = env.$durableObjectBinding$.get(id);
