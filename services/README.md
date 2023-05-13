@@ -1,7 +1,7 @@
 # Services
 
 The file "services.ts" includes a description of abstract classes for microservices.
-There are 3 abstract classes from which classes are extended for implementation: t
+There are 3 abstract classes from which classes are extended for implementation:  
 
 -THttpService --- for http request processing services  
 -TCronService -- for scheduled services  
@@ -65,6 +65,6 @@ All requests are sent to the access-queue unconditionally.
 -fetch (to communicate with a Durable Object)  
 -alarm (to perform an action when an alarm occurs)  
 
-To access an Durable Object call methods setDurableKVParam, getDurableKVParam, getDurableKVParamWithMetadata. The "stub" parameter of these methods is obtained as follows:
-let id = env.$durableObjectBinding$.idFromName($key$);
-let stub = env.$durableObjectBinding$.get(id);
+To access an Durable Object call methods setDurableKVParam, getDurableKVParam, getDurableKVParamWithMetadata. The "stub" parameter of these methods is obtained as follows:  
+let id = env.$durableObjectBinding$.idFromName($key$);  
+let stub = env.$durableObjectBinding$.get(id);  
