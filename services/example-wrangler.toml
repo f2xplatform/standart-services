@@ -19,6 +19,7 @@ queues.producers=[
  #{queue = "access-queue", binding = "q_access" } for THTTPService classes
 ]
 triggers.crons = [""]
+#durable_objects.bindings = [{ name = "", class_name = "" }] for TDurableKV classes
 
 [env.stage]
 name="worker-name"
@@ -35,3 +36,8 @@ queues.producers=[
  #{queue = "access-queue", binding = "q_access" } for THTTPService classes
 ]
 triggers.crons = [""]
+#durable_objects.bindings = [{ name = "", class_name = "" }] for TDurableKV classes
+
+#[[migrations]] for TDurableKV classes
+#tag = "v1" 
+#new_classes = [""]
