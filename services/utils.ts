@@ -71,3 +71,21 @@ export async function decrypt(
 
   return await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
 }
+
+export const createShaHmac = async (
+  privateKey: ArrayBuffer,
+  message: string,
+  algorithm: string
+) => {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    privateKey,
+    {
+      name: "HMAC",
+      hash: { name: algorithm },
+    },
+    true,
+    ["sign", "verify"]
+  );
+  return await crypto.subtle.sign("HMAC", key, stringToBuffer(message));
+};
