@@ -89,3 +89,26 @@ export const createShaHmac = async (
   );
   return await crypto.subtle.sign("HMAC", key, stringToBuffer(message));
 };
+
+export const returnHmacAuth = async (
+  nonce: number,
+  webApiId: string,
+  webApiKey: string,
+  webApiSecret: string,
+  method: string,
+  url: string
+) => {
+  // Signature = unix_timestamp_in_ms + webApiId + webApiKey + req.getMethod() + req.getURI() + content;
+  let signatureString = nonce + webApiId + webApiKey + method + url;
+
+  // key buffer
+  const secretBuffer = stringToBuffer(webApiSecret);
+
+  // Base64HMACSignature = Base64(HmacSHA256(Signature, webApiSecret));
+  const hmac = await createShaHmac(secretBuffer, signatureString, "SHA-256");
+  const base64HMACSignature = btoa(bufferToString(hmac));
+
+  // HMAC:webApiId:webApiKey:unix_timestamp_in_ms:Base64HMACSignature"
+
+  return `HMAC ${webApiId}:${webApiKey}:${nonce}:${base64HMACSignature}`;
+};
