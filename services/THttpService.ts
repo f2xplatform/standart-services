@@ -10,7 +10,7 @@ export const SUB_REQUEST_HEADERS_ARRAY = [
 ];
 
 export interface IHttpServiceEnv extends IBaseServiceEnv {
-  q_access: Queue;
+  q_access: Queue<any>;
 }
 
 export type TRequestHttpParams = {
@@ -34,7 +34,7 @@ export abstract class THttpService extends TBaseService {
   protected requestHttpParams = {} as TRequestHttpParams;
   private _requestUrlPatterns: Array<TRequestUrlPattern> =
     {} as Array<TRequestUrlPattern>;
-  protected readonly q_access: Queue;
+  protected readonly q_access: Queue<any>;
   abstract initMaskedArray()
 
   constructor(env: IHttpServiceEnv, name: string) {
