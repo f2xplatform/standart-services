@@ -97,11 +97,11 @@ export const returnHmacAuth = async (
   webApiSecret: string,
   method: string,
   url: string,
-  content: string
+  content?: string
 ) => {
   // Signature = unix_timestamp_in_ms + webApiId + webApiKey + req.getMethod() + req.getURI() + content;
   let signatureString = nonce + webApiId + webApiKey + method + url;
-  
+
   if(content) {
     signatureString += content
   }
