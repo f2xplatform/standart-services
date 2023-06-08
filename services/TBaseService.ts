@@ -332,7 +332,7 @@ export abstract class TBaseService {
       let queueMessage = {
         serviceName: this.name,
         time: new Date(Date.now()).toISOString(),
-        message: this.maskInfo(JSON.stringify(exceptionMessage, null, 2)),
+        message: (this.maskInfo(JSON.stringify(exceptionMessage, null, 2))).slice(0, 120000),
       };
       await this.q_exception.send(queueMessage);
     }
@@ -426,7 +426,7 @@ export abstract class TBaseService {
       id: this.id,
       time: new Date(Date.now()).toISOString(),
       error: error,
-      message: this.maskInfo(message),
+      message: (this.maskInfo(message)).slice(0, 120000),
       trace: this.trace,
     };
     await this.q_trace.send(result);
