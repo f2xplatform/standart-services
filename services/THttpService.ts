@@ -179,7 +179,7 @@ export abstract class THttpService extends TBaseService {
           name: this.name,
           id: request.id,
           descr: request.descr,
-          url: `https://${this.name}${request.pathname}`,
+          url: request.search ? `https://${this.name}${request.pathname}?${request.search}` : `https://${this.name}${request.pathname}`,
           method: request.method,
           test: request.test,
         },
@@ -217,7 +217,7 @@ export abstract class THttpService extends TBaseService {
           pathname: string;
           search?: string;
         } = { pathname: pattern.pathname };
-        
+
         if (pattern.search) {
           patternParam.search = pattern.search;
         }
