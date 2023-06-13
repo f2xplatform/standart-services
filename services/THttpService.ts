@@ -25,6 +25,7 @@ export type TRequestUrlPattern = {
   id: string;
   descr: string;
   pathname: string;
+  search?:string;
   method: string;
   func: Function;
   test?: {};
@@ -212,7 +213,18 @@ export abstract class THttpService extends TBaseService {
   async handleUrlRequest(env: IHttpServiceEnv) {
     try {
       for (let pattern of this.requestUrlPatterns) {
-        let urlPattern = new URLPattern({ pathname: pattern.pathname });
+        let patternParam: {
+          pathname: string;
+          search?: string;
+        } = { pathname: pattern.pathname };
+        
+        if (pattern.search) {
+          patternParam.search = pattern.search;
+        }
+        let urlPattern = new URLPattern({
+          pathname: pattern.pathname,
+          search: pattern.search,
+        });
         if (
           !urlPattern.test(this.requestHttpParams.url) ||
           this.requestHttpParams.method !== pattern.method
@@ -225,13 +237,24 @@ export abstract class THttpService extends TBaseService {
           pattern,
           this.requestHttpParams
         );
-        if (result?.responseError && Object.keys(result?.responseError).length) {
+        if (
+          result?.responseError &&
+          Object.keys(result?.responseError).length
+        ) {
           return await this.generateResponseError(
             result.responseStatus,
-            result.responseError?.errorCode ? result.responseError?.errorCode : `API_ERROR`,
-            result.responseError?.errorText ? result.responseError?.errorText : `Error on ${this.requestHttpParams.url}`,
-            result.responseError?.errorTrace ? result.responseError?.errorTrace : null,
-            result.responseError?.errorData ? result.responseError?.errorData : null
+            result.responseError?.errorCode
+              ? result.responseError?.errorCode
+              : `API_ERROR`,
+            result.responseError?.errorText
+              ? result.responseError?.errorText
+              : `Error on ${this.requestHttpParams.url}`,
+            result.responseError?.errorTrace
+              ? result.responseError?.errorTrace
+              : null,
+            result.responseError?.errorData
+              ? result.responseError?.errorData
+              : null
           );
         }
 
