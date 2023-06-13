@@ -221,10 +221,7 @@ export abstract class THttpService extends TBaseService {
         if (pattern.search) {
           patternParam.search = pattern.search;
         }
-        let urlPattern = new URLPattern({
-          pathname: pattern.pathname,
-          search: pattern.search,
-        });
+        let urlPattern = new URLPattern(patternParam);
         if (
           !urlPattern.test(this.requestHttpParams.url) ||
           this.requestHttpParams.method !== pattern.method
