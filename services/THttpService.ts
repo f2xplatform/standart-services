@@ -144,7 +144,7 @@ export abstract class THttpService extends TBaseService {
         id: item.id,
         name: this.name,
         descr: item.descr,
-        url: `https://${this.name}${item.pathname}`,
+        url: item.search ? `https://${this.name}${item.pathname}?${item.search}` : `https://${this.name}${item.pathname}`,
         method: item.method,
       };
     });
