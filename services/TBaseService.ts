@@ -5,8 +5,8 @@ export interface IBindingEnv {}
 
 export interface IBaseServiceEnv extends IQueueEnv, IBindingEnv {
   kv_env: KVNamespace;
-  q_trace: Queue;
-  q_exception: Queue;
+  q_trace: Queue<any>;
+  q_exception: Queue<any>;
   TRACE: "0" | "1" | "2";
   INSTANCE: "stage" | "main";
   LOG: "no" | "error" | "all";
@@ -15,8 +15,8 @@ export interface IBaseServiceEnv extends IQueueEnv, IBindingEnv {
 
 export abstract class TBaseService {
   protected readonly name: string;
-  protected readonly q_trace: Queue;
-  protected readonly q_exception: Queue;
+  protected readonly q_trace: Queue<any>;
+  protected readonly q_exception: Queue<any>;
   protected readonly kv_env: KVNamespace;
   private _id: string = "";
   private _trace: number = 0;
@@ -415,7 +415,7 @@ export abstract class TBaseService {
       trace: this.trace,
       message: message,
     };
-    let queueStorage = env[queue] as Queue;
+    let queueStorage = env[queue] as Queue<any>;
     await queueStorage.send(result);
   }
 

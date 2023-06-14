@@ -10,7 +10,7 @@ export const SUB_REQUEST_HEADERS_ARRAY = [
 ];
 
 export interface IHttpServiceEnv extends IBaseServiceEnv {
-  q_access: Queue;
+  q_access: Queue<any>;
 }
 
 export type TRequestHttpParams = {
@@ -25,6 +25,7 @@ export type TRequestUrlPattern = {
   id: string;
   descr: string;
   pathname: string;
+  search?:string;
   method: string;
   func: Function;
   test?: {};
@@ -34,7 +35,7 @@ export abstract class THttpService extends TBaseService {
   protected requestHttpParams = {} as TRequestHttpParams;
   private _requestUrlPatterns: Array<TRequestUrlPattern> =
     {} as Array<TRequestUrlPattern>;
-  protected readonly q_access: Queue;
+  protected readonly q_access: Queue<any>;
   abstract initMaskedArray()
 
   constructor(env: IHttpServiceEnv, name: string) {
@@ -143,7 +144,7 @@ export abstract class THttpService extends TBaseService {
         id: item.id,
         name: this.name,
         descr: item.descr,
-        url: `https://${this.name}${item.pathname}`,
+        url: item.search ? `https://${this.name}${item.pathname}?${item.search}` : `https://${this.name}${item.pathname}`,
         method: item.method,
       };
     });
@@ -178,7 +179,7 @@ export abstract class THttpService extends TBaseService {
           name: this.name,
           id: request.id,
           descr: request.descr,
-          url: `https://${this.name}${request.pathname}`,
+          url: request.search ? `https://${this.name}${request.pathname}?${request.search}` : `https://${this.name}${request.pathname}`,
           method: request.method,
           test: request.test,
         },
@@ -212,7 +213,15 @@ export abstract class THttpService extends TBaseService {
   async handleUrlRequest(env: IHttpServiceEnv) {
     try {
       for (let pattern of this.requestUrlPatterns) {
-        let urlPattern = new URLPattern({ pathname: pattern.pathname });
+        let patternParam: {
+          pathname: string;
+          search?: string;
+        } = { pathname: pattern.pathname };
+
+        if (pattern.search) {
+          patternParam.search = pattern.search;
+        }
+        let urlPattern = new URLPattern(patternParam);
         if (
           !urlPattern.test(this.requestHttpParams.url) ||
           this.requestHttpParams.method !== pattern.method
@@ -225,13 +234,24 @@ export abstract class THttpService extends TBaseService {
           pattern,
           this.requestHttpParams
         );
-        if (result?.responseError && Object.keys(result?.responseError).length) {
+        if (
+          result?.responseError &&
+          Object.keys(result?.responseError).length
+        ) {
           return await this.generateResponseError(
             result.responseStatus,
-            result.responseError?.errorCode ? result.responseError?.errorCode : `API_ERROR`,
-            result.responseError?.errorText ? result.responseError?.errorText : `Error on ${this.requestHttpParams.url}`,
-            result.responseError?.errorTrace ? result.responseError?.errorTrace : null,
-            result.responseError?.errorData ? result.responseError?.errorData : null
+            result.responseError?.errorCode
+              ? result.responseError?.errorCode
+              : `API_ERROR`,
+            result.responseError?.errorText
+              ? result.responseError?.errorText
+              : `Error on ${this.requestHttpParams.url}`,
+            result.responseError?.errorTrace
+              ? result.responseError?.errorTrace
+              : null,
+            result.responseError?.errorData
+              ? result.responseError?.errorData
+              : null
           );
         }
 
