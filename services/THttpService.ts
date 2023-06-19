@@ -28,6 +28,7 @@ export type TRequestUrlPattern = {
   search?:string;
   method: string;
   func: Function;
+  category? : string;
   test?: {};
 };
 
@@ -146,6 +147,7 @@ export abstract class THttpService extends TBaseService {
         descr: item.descr,
         url: item.search ? `https://${this.name}${item.pathname}?${item.search}` : `https://${this.name}${item.pathname}`,
         method: item.method,
+        category: item?.category
       };
     });
     let result = {
