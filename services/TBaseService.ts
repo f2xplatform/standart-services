@@ -8,7 +8,7 @@ export interface IBaseServiceEnv extends IQueueEnv, IBindingEnv {
   q_trace: Queue<any>;
   q_exception: Queue<any>;
   TRACE: "0" | "1" | "2";
-  INSTANCE: "stage" | "main";
+  INSTANCE: "stage" | "main" | "test" | "dev";
   LOG: "no" | "error" | "all";
   EXCEPTION: "0" | "1";
 }
@@ -23,7 +23,7 @@ export abstract class TBaseService {
   private _log: "no" | "error" | "all" = "no";
   private _exception: number = 0;
   abstract maskArray: Array<string>;
-  readonly INSTANCE: "stage" | "main";
+  readonly INSTANCE: "stage" | "main" | "dev" | "test";
 
   constructor(env: IBaseServiceEnv, name: string) {
     this.name = name;
@@ -150,13 +150,16 @@ export abstract class TBaseService {
   }
 
   async setDurableKVParam(
-    stub: DurableObject,
+    DOBinding: DurableObjectNamespace,
+    idFromName: string,
     key: string,
     value: string,
     expire: number,
     meta?: { [key: string]: any },
     cryptoPass?: string
   ): Promise<any> {
+    let id = DOBinding.idFromName(idFromName + this.INSTANCE);
+    let stub = DOBinding.get(id);
     let params: {
       key: string;
       value: string;
@@ -166,7 +169,7 @@ export abstract class TBaseService {
       key: key,
       value: value,
       meta: meta,
-      expire: expire
+      expire: expire,
     };
 
     if (cryptoPass) {
@@ -188,12 +191,15 @@ export abstract class TBaseService {
   }
 
   async getDurableKVParamWithMetadata(
-    stub: DurableObject,
+    DOBinding: DurableObjectNamespace,
+    idFromName: string,
     key: string,
     cryptoPass?: string
   ): Promise<any> {
     try {
       let request = new Request("https://v1/kv", this.generateHttpInit("GET"));
+      let id = DOBinding.idFromName(idFromName + this.INSTANCE);
+      let stub = DOBinding.get(id);
       let response = await stub.fetch(request);
       if (response.status === 200) {
         let result: {
@@ -223,19 +229,26 @@ export abstract class TBaseService {
   }
 
   async getDurableKVParam(
-    stub: DurableObject,
+    DOBinding: DurableObjectNamespace,
+    idFromName: string,
     key: string,
     cryptoPass?: string
   ): Promise<any> {
     let result = await this.getDurableKVParamWithMetadata(
-      stub,
+      DOBinding,
+      idFromName,
       key,
       cryptoPass
     );
     return result?.value;
   }
 
-  async deleteDurableKVParamWithMetadata(stub: DurableObject): Promise<any> {
+  async deleteDurableKVParamWithMetadata(
+    DOBinding: DurableObjectNamespace,
+    idFromName: string
+  ): Promise<any> {
+    let id = DOBinding.idFromName(idFromName + this.INSTANCE);
+    let stub = DOBinding.get(id);
     let request = new Request("https://v1/kv", this.generateHttpInit("DELETE"));
     let response = await stub.fetch(request);
     let result = await response.json();
@@ -332,7 +345,10 @@ export abstract class TBaseService {
       let queueMessage = {
         serviceName: this.name,
         time: new Date(Date.now()).toISOString(),
-        message: (this.maskInfo(JSON.stringify(exceptionMessage, null, 2))).slice(0, 5000),
+        message: this.maskInfo(JSON.stringify(exceptionMessage, null, 2)).slice(
+          0,
+          5000
+        ),
       };
       await this.q_exception.send(queueMessage);
     }
@@ -426,7 +442,7 @@ export abstract class TBaseService {
       id: this.id,
       time: new Date(Date.now()).toISOString(),
       error: error,
-      message: (this.maskInfo(message)).slice(0, 5000),
+      message: this.maskInfo(message).slice(0, 5000),
       trace: this.trace,
     };
     await this.q_trace.send(result);
