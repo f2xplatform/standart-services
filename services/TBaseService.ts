@@ -8,7 +8,7 @@ export interface IBaseServiceEnv extends IQueueEnv, IBindingEnv {
   q_trace: Queue<any>;
   q_exception: Queue<any>;
   TRACE: "0" | "1" | "2";
-  INSTANCE: "stage" | "main";
+  INSTANCE: "stage" | "main" | "test" | "dev";
   LOG: "no" | "error" | "all";
   EXCEPTION: "0" | "1";
 }
@@ -23,7 +23,7 @@ export abstract class TBaseService {
   private _log: "no" | "error" | "all" = "no";
   private _exception: number = 0;
   abstract maskArray: Array<string>;
-  readonly INSTANCE: "stage" | "main";
+  readonly INSTANCE: "stage" | "main" | "dev" | "test";
 
   constructor(env: IBaseServiceEnv, name: string) {
     this.name = name;
@@ -166,7 +166,7 @@ export abstract class TBaseService {
       key: key,
       value: value,
       meta: meta,
-      expire: expire
+      expire: expire,
     };
 
     if (cryptoPass) {
@@ -332,7 +332,10 @@ export abstract class TBaseService {
       let queueMessage = {
         serviceName: this.name,
         time: new Date(Date.now()).toISOString(),
-        message: (this.maskInfo(JSON.stringify(exceptionMessage, null, 2))).slice(0, 5000),
+        message: this.maskInfo(JSON.stringify(exceptionMessage, null, 2)).slice(
+          0,
+          5000
+        ),
       };
       await this.q_exception.send(queueMessage);
     }
@@ -426,7 +429,7 @@ export abstract class TBaseService {
       id: this.id,
       time: new Date(Date.now()).toISOString(),
       error: error,
-      message: (this.maskInfo(message)).slice(0, 5000),
+      message: this.maskInfo(message).slice(0, 5000),
       trace: this.trace,
     };
     await this.q_trace.send(result);
