@@ -150,16 +150,13 @@ export abstract class TBaseService {
   }
 
   async setDurableKVParam(
-    DOBinding: DurableObjectNamespace,
-    idFromName: string,
+    stub: DurableObject,
     key: string,
     value: string,
     expire: number,
     meta?: { [key: string]: any },
     cryptoPass?: string
   ): Promise<any> {
-    let id = DOBinding.idFromName(idFromName + this.INSTANCE);
-    let stub = DOBinding.get(id);
     let params: {
       key: string;
       value: string;
@@ -191,15 +188,12 @@ export abstract class TBaseService {
   }
 
   async getDurableKVParamWithMetadata(
-    DOBinding: DurableObjectNamespace,
-    idFromName: string,
+    stub: DurableObject,
     key: string,
     cryptoPass?: string
   ): Promise<any> {
     try {
       let request = new Request("https://v1/kv", this.generateHttpInit("GET"));
-      let id = DOBinding.idFromName(idFromName + this.INSTANCE);
-      let stub = DOBinding.get(id);
       let response = await stub.fetch(request);
       if (response.status === 200) {
         let result: {
@@ -229,26 +223,19 @@ export abstract class TBaseService {
   }
 
   async getDurableKVParam(
-    DOBinding: DurableObjectNamespace,
-    idFromName: string,
+    stub: DurableObject,
     key: string,
     cryptoPass?: string
   ): Promise<any> {
     let result = await this.getDurableKVParamWithMetadata(
-      DOBinding,
-      idFromName,
+      stub,
       key,
       cryptoPass
     );
     return result?.value;
   }
 
-  async deleteDurableKVParamWithMetadata(
-    DOBinding: DurableObjectNamespace,
-    idFromName: string
-  ): Promise<any> {
-    let id = DOBinding.idFromName(idFromName + this.INSTANCE);
-    let stub = DOBinding.get(id);
+  async deleteDurableKVParamWithMetadata(stub: DurableObject): Promise<any> {
     let request = new Request("https://v1/kv", this.generateHttpInit("DELETE"));
     let response = await stub.fetch(request);
     let result = await response.json();
