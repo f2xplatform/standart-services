@@ -38,6 +38,7 @@ export abstract class THttpService extends TBaseService {
     {} as Array<TRequestUrlPattern>;
   protected readonly q_access: Queue<any>;
   abstract initMaskedArray()
+  abstract varsArray: Array<string>;
 
   constructor(env: IHttpServiceEnv, name: string) {
     super(env, name);
@@ -150,15 +151,22 @@ export abstract class THttpService extends TBaseService {
         category: item?.category
       };
     });
+    let vars = {
+      TRACE: env.TRACE,
+      LOG: env.TRACE,
+      EXCEPTION: env.EXCEPTION,
+      INSTANCE: env.INSTANCE
+    }
+
+    for (let v of this.varsArray) {
+      vars[v] = env[v];
+    }
+
     let result = {
       responseStatus: 200,
       responseError: [],
       responseResult: {
-        vars: {
-          TRACE: env.TRACE,
-          LOG: env.TRACE,
-          EXCEPTION: env.EXCEPTION,
-        },
+        vars: vars,
         params: res,
       },
     };
