@@ -7,8 +7,7 @@
 		"module": "esnext",
 		"moduleResolution": "node",
 		"types": [
-			"@cloudflare/workers-types",
-			"node"
+			"@cloudflare/workers-types"
 			// "jest"
 		],
 		"resolveJsonModule": true ,

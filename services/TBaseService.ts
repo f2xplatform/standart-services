@@ -1,5 +1,4 @@
 import { bufferToString, decrypt, stringToBuffer, encrypt } from "./utils";
-require('lps-pa-worker/package.json').version
 
 export interface IQueueEnv {}
 export interface IBindingEnv {}
