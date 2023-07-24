@@ -8,6 +8,7 @@
 		"moduleResolution": "node",
 		"types": [
 			"@cloudflare/workers-types",
+			"node"
 			// "jest"
 		],
 		"resolveJsonModule": true ,
