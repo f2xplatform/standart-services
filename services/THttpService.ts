@@ -38,11 +38,10 @@ export abstract class THttpService extends TBaseService {
     {} as Array<TRequestUrlPattern>;
   protected readonly q_access: Queue<any>;
   abstract initMaskedArray()
-  varsEnvArray: Array<string>;
-  version: string;
+  protected varsEnvArray: Array<string>;
 
-  constructor(env: IHttpServiceEnv, name: string) {
-    super(env, name);
+  constructor(env: IHttpServiceEnv, name: string, version: string) {
+    super(env, name, version);
     this.q_access = env.q_access;
     this.requestUrlPatterns = [] as Array<TRequestUrlPattern>;
   }

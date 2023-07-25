@@ -24,8 +24,9 @@ export abstract class TBaseService {
   private _exception: number = 0;
   abstract maskArray: Array<string>;
   readonly INSTANCE: "stage" | "main" | "dev" | "test";
+  protected version: string;
 
-  constructor(env: IBaseServiceEnv, name: string) {
+  constructor(env: IBaseServiceEnv, name: string, version:string) {
     this.name = name;
     this.kv_env = env.kv_env;
     this.id = this.getRandomID();
@@ -35,6 +36,7 @@ export abstract class TBaseService {
     this.q_exception = env.q_exception;
     this.INSTANCE = env.INSTANCE;
     this.log = env.LOG;
+    this.version = version;
   }
 
   get trace(): number {

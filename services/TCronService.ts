@@ -3,8 +3,8 @@ import { IBaseServiceEnv, TBaseService } from "./TBaseService";
 export interface ICronServiceEnv extends IBaseServiceEnv {}
 
 export abstract class TCronService extends TBaseService {
-  constructor(env: ICronServiceEnv, name: string) {
-    super(env, name);
+  constructor(env: ICronServiceEnv, name: string, version: string) {
+    super(env, name, version);
   }
 
   async init() {

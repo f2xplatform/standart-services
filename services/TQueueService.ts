@@ -4,8 +4,8 @@ export interface IQueuesServiceEnv extends IBaseServiceEnv {}
 
 export abstract class TQueueService extends TBaseService {
   protected env_trace: number = this.trace;
-  constructor(env: IQueuesServiceEnv, name: string) {
-    super(env, name);
+  constructor(env: IQueuesServiceEnv, name: string, version: string) {
+    super(env, name, version);
   }
   async init(messageBatch: MessageBatch) {
     if (this.trace) {
