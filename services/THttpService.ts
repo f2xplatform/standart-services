@@ -38,7 +38,7 @@ export abstract class THttpService extends TBaseService {
     {} as Array<TRequestUrlPattern>;
   protected readonly q_access: Queue<any>;
   abstract initMaskedArray()
-  varsArray: Array<string>;
+  varsEnvArray: Array<string>;
   version: string;
 
   constructor(env: IHttpServiceEnv, name: string) {
@@ -160,8 +160,8 @@ export abstract class THttpService extends TBaseService {
       VERSION: this.version
     }
 
-    if (this.varsArray) {
-      for (let v of this.varsArray) {
+    if (this.varsEnvArray) {
+      for (let v of this.varsEnvArray) {
         vars[v] = env[v];
       }
     }
