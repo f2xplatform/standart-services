@@ -175,10 +175,10 @@ export abstract class TBaseService {
       let iv = crypto.getRandomValues(new Uint8Array(12));
       let encryptedValue = await encrypt(value, key, iv, cryptoPass);
       params.value = bufferToString(encryptedValue);
-      if (meta) {
-        meta.iv = bufferToString(iv);
+      if (params.meta) {
+        params.meta.iv = bufferToString(iv);
       } else {
-        meta = { iv: bufferToString(iv) };
+        params.meta = { iv: bufferToString(iv) };
       }
     }
     let request = new Request(
