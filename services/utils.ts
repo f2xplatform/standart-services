@@ -116,3 +116,35 @@ export const returnHmacAuth = async (
 
   return `HMAC ${webApiId}:${webApiKey}:${nonce}:${base64HMACSignature}`;
 };
+
+export const symbolsToTGShielding = [
+  "_",
+  "*",
+  "[",
+  "]",
+  "(",
+  ")",
+  "~",
+  "`",
+  ">",
+  "#",
+  "+",
+  "-",
+  "=",
+  "|",
+  "{",
+  "}",
+  ".",
+  "!",
+  "/",
+];
+
+export function shieldingStr(type:string, str: string, ) {
+  if(type = "tg") {
+    let newStr = str;
+    for (let sym of symbolsToTGShielding) {
+      newStr = newStr.replaceAll(sym, `\\${sym}`);
+    }
+    return newStr;
+  }
+}
