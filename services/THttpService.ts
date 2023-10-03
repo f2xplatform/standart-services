@@ -60,7 +60,7 @@ export abstract class THttpService extends TBaseService {
         }
       }
     );
-    let newHeaders = Object.assign({}, headers, filteredHeaders);
+    let newHeaders = Object.assign({}, headers, Object.fromEntries(filteredHeaders));
     return await super.callHttp(url, method, params, newHeaders, cf);
   }
 
@@ -79,7 +79,7 @@ export abstract class THttpService extends TBaseService {
         }
       }
     );
-    let newHeaders = Object.assign({}, headers, filteredHeaders);
+    let newHeaders = Object.assign({}, headers, Object.fromEntries(filteredHeaders));
     return await super.callService(env, name, url, method, params, newHeaders);
   }
 
