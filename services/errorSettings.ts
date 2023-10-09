@@ -14,6 +14,13 @@ export const errorSettings = {
         }
     },
     {
+        errorCode: "VERIFICATION_CODE_INVALID",
+        errorText: {
+            ru: "Неверный 2FA код",
+            en: "2FA code is invalid"
+        }
+    },
+    {
         errorCode: "IDENTITY_TYPE_REQUIRED",
         errorText: {
             ru: "Неверно введенные данные",
