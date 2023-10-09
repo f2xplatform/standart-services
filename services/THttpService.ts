@@ -1,5 +1,6 @@
 import { IBaseServiceEnv, IBindingEnv, TBaseService } from "./TBaseService";
 import * as testSettings from "./HttpServiceTestSettings.json";
+import { errorSettings } from "./errorSettings";
 
 export const SUB_REQUEST_HEADERS_ARRAY = [
   "cf-connecting-ip",
@@ -303,8 +304,28 @@ export abstract class THttpService extends TBaseService {
     errorCode: string,
     errorText: string,
     errorTrace: any,
+    lang?:string,
     data?: any
   ) {
+    lang = lang.toLowerCase() === "ru" ? "ru" : "en";
+    let message = errorSettings[statusCode]?.find((item) => item.errorCode.toLowerCase() === errorCode.toLowerCase())?.[lang];
+
+    //если нет переведенной ошибки в настройках
+    if(!message){
+      let errorsFromKV:string  = await this.getKVParam("error_to_translate"); //ищем в KV
+      if(errorsFromKV) {
+        let parsedErrorsFromKV:Array<{statusCode: number, errorCode: string }> = JSON.parse(errorsFromKV);
+        //ищем сохранена ли уже эта ошибка
+        let findedError = parsedErrorsFromKV.find((item) => item.statusCode === statusCode && item.errorCode === errorCode);
+        //если новая, то добавляем в массив
+        if(!findedError) {
+          parsedErrorsFromKV.push({statusCode: statusCode, errorCode: errorCode });
+          await this.setKVParam("error_to_translate", JSON.stringify(parsedErrorsFromKV));
+        }
+      }
+      message = errorText //или какая-то страндартная ошибка типа "Что-то пошло не так"
+    }
+
     let error: {
       code: string;
       message: string;
@@ -315,7 +336,7 @@ export abstract class THttpService extends TBaseService {
       trace: null | string;
     } = {
       code: errorCode,
-      message: errorText,
+      message: message,
       trace: errorTrace,
     };
     if (data) {
