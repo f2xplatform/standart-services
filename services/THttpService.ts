@@ -241,12 +241,29 @@ export abstract class THttpService extends TBaseService {
         )
           continue;
 
-        let result = await pattern.func.call(
-          this,
-          env,
-          pattern,
-          this.requestHttpParams
-        );
+        let result;
+        try {
+          result = await pattern.func.call(
+            this,
+            env,
+            pattern,
+            this.requestHttpParams
+          );
+        } catch (error: any) {
+          let exceptionMessage = await this.getExceptionMessage.call(
+            this,
+            error,
+            this.requestHttpParams.url,
+            this.requestHttpParams.body
+          );
+          return await this.generateResponseError(
+            400,
+            "VERIFICATION_FAILED",
+            "Bad params",
+            exceptionMessage
+          );
+        }
+
         if (
           result?.responseError &&
           Object.keys(result?.responseError).length
