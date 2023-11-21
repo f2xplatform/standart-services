@@ -352,7 +352,31 @@ export abstract class TBaseService {
     let responseUrl = responseClone.url;
     let responseHeaders = Object.fromEntries(responseClone.headers);
     let responseStatus = responseClone.status;
-    let responseBody = await responseClone.text();
+    let responseBody:any = await responseClone.text();
+    if(responseBody) {
+      responseBody = JSON.parse(responseBody)
+      if(responseBody?.error?.innerErrors?.[0]?.details?.state){
+        this.maskArray.push(responseBody.error.innerErrors[0].details.state)
+      }
+      if(responseBody?.state){
+        this.maskArray.push(responseBody.state)
+      }
+      if(responseBody?.state){
+        this.maskArray.push(responseBody.state)
+      }
+      if(responseBody?.clientId){
+        this.maskArray.push(responseBody.clientId)
+      }
+      if(responseBody?.clientSecret){
+        this.maskArray.push(responseBody.clientSecret)
+      }
+      if(responseBody?.token?.refresh_token){
+        this.maskArray.push(responseBody.token.refresh_token)
+      }
+      if(responseBody?.token?.access_token){
+        this.maskArray.push(responseBody.token.access_token)
+      }
+    }
 
     let message: {
       url: string;
