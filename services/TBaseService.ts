@@ -287,6 +287,8 @@ export abstract class TBaseService {
     return str;
   }
 
+  async processMaskArray(responseBody: any) {}
+
   protected async getTraceMessageHttpRequest(request: Request) {
     let requestClone = request.clone();
     let requestHeaders = Object.fromEntries(requestClone.headers);
@@ -352,7 +354,8 @@ export abstract class TBaseService {
     let responseUrl = responseClone.url;
     let responseHeaders = Object.fromEntries(responseClone.headers);
     let responseStatus = responseClone.status;
-    let responseBody = await responseClone.text();
+    let responseBody:any = await responseClone.text();
+    await this.processMaskArray(responseBody);
 
     let message: {
       url: string;
