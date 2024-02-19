@@ -25,6 +25,8 @@ export abstract class TBaseService {
   abstract maskArray: Array<string>;
   readonly INSTANCE: "stage" | "main" | "dev" | "test";
   protected version: string;
+  protected lastServiceCall: {url: string, statusCode: number};
+  protected lastHttpCall: {url: string, statusCode: number};
 
   constructor(env: IBaseServiceEnv, name: string, version:string) {
     this.name = name;
@@ -319,12 +321,16 @@ export abstract class TBaseService {
 
   protected async getExceptionMessage(exception: any, url: string, body: any) {
     let exceptionMessage: {
+      lastHttpCall: {url:string, statusCode: number},
+      lastServiceCall: {url:string, statusCode: number},
       url: string;
       body: any;
       code: string;
       message: string;
       stack?: string;
     } = {
+      lastHttpCall: this.lastHttpCall,
+      lastServiceCall: this.lastServiceCall,
       url: url,
       body: body,
       code: exception.code,
@@ -387,10 +393,12 @@ export abstract class TBaseService {
     headers?: {}
   ): Promise<any> {
     let service = env[name] as Fetcher;
+    let serviceUrl = `https://${name}/${url}`
     let response = await service.fetch(
-      `https://${name}/${url}`,
+      serviceUrl,
       this.generateHttpInit(method, params, headers)
     );
+    this.lastServiceCall = {url: serviceUrl, statusCode: response.status }
     return await response.json();
   }
 
@@ -410,6 +418,7 @@ export abstract class TBaseService {
       await this.traceMessage(reqMessage, "http_request");
     }
     let response = await fetch(request);
+    this.lastHttpCall = {url: url, statusCode: response.status }
     if (this.trace) {
       let respMessage = await this.getTraceMessageHttpResponse(response);
       await this.traceMessage(respMessage, "http_response");
