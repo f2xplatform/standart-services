@@ -348,6 +348,7 @@ export abstract class TBaseService {
         ),
       };
       await this.q_exception.send(queueMessage);
+      console.log(queueMessage)
     }
     if (this.trace) {
       exceptionMessage.stack = exception.stack;
@@ -447,6 +448,9 @@ export abstract class TBaseService {
       trace: this.trace,
     };
     await this.q_trace.send(result);
+    if(this.trace === 2) {
+      console.log(result)
+    }
   }
 
   private getRandomID() {
