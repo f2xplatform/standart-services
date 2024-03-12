@@ -448,9 +448,7 @@ export abstract class TBaseService {
       trace: this.trace,
     };
     await this.q_trace.send(result);
-    if(this.trace === 2) {
-      console.log(result)
-    }
+    console.log(result)
   }
 
   private getRandomID() {
