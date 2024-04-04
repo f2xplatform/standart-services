@@ -117,8 +117,8 @@ export abstract class THttpService extends TBaseService {
       url: request.url,
       headers: Object.fromEntries(request.headers),
       body: await requestClone.text(),
-      ip: request.headers.get("x-forwarded-for")
-        ? request.headers.get("x-forwarded-for")
+      ip: request.headers.get("cf-connecting-ip")
+        ? request.headers.get("cf-connecting-ip")
         : "",
     };
 
