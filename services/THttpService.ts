@@ -60,7 +60,7 @@ export abstract class THttpService extends TBaseService {
         }
       }
     );
-    let newHeaders = Object.assign({"X-Forwarded-For": this.requestHttpParams.ip}, headers, Object.fromEntries(filteredHeaders));
+    let newHeaders = this.requestHttpParams.ip?.length ? Object.assign({"X-Forwarded-For": this.requestHttpParams.ip}, headers, Object.fromEntries(filteredHeaders)) : Object.assign({}, headers, Object.fromEntries(filteredHeaders));
     return await super.callHttp(url, method, params, newHeaders, cf);
   }
 
