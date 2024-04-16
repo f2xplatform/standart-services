@@ -159,18 +159,21 @@ export abstract class TBaseService {
     value: string,
     expire: number,
     meta?: { [key: string]: any },
-    cryptoPass?: string
+    cryptoPass?: string,
+    clear?: number
   ): Promise<any> {
     let params: {
       key: string;
       value: string;
       expire: number;
       meta?: { [key: string]: any };
+      clear?: number
     } = {
       key: key,
       value: value,
       meta: meta,
       expire: expire,
+      clear: clear
     };
 
     if (cryptoPass) {
