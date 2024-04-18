@@ -11,6 +11,7 @@ export const SUB_REQUEST_HEADERS_ARRAY = [
 
 export interface IHttpServiceEnv extends IBaseServiceEnv {
   q_access: Queue<any>;
+  std_analytics: AnalyticsEngineDataset
 }
 
 export type TRequestHttpParams = {
@@ -249,6 +250,18 @@ export abstract class THttpService extends TBaseService {
             pattern,
             this.requestHttpParams
           );
+          //analytics
+          try {
+            env.std_analytics.writeDataPoint({
+              blobs: [
+                result.responseStatus === 200 ? 0 : 1,
+                result.responseStatus,
+                new URL(this.requestHttpParams.url)?.pathname,
+                pattern.id,
+              ],
+              indexes: [this.name],
+            });
+          } catch (e) {}
         } catch (error: any) {
           let exceptionMessage = await this.getExceptionMessage.call(
             this,
