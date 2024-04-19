@@ -251,17 +251,17 @@ export abstract class THttpService extends TBaseService {
             this.requestHttpParams
           );
           //analytics
-          try {
-            env.std_analytics.writeDataPoint({
-              blobs: [
-                result.responseStatus === 200 ? 0 : 1,
-                result.responseStatus,
-                new URL(this.requestHttpParams.url)?.pathname,
-                pattern.id,
-              ],
-              indexes: [this.name],
-            });
-          } catch (e) {}
+          // try {
+          //   env.std_analytics.writeDataPoint({
+          //     blobs: [
+          //       result.responseStatus === 200 ? 0 : 1,
+          //       result.responseStatus,
+          //       new URL(this.requestHttpParams.url)?.pathname,
+          //       pattern.id,
+          //     ],
+          //     indexes: [this.name],
+          //   });
+          // } catch (e) {}
         } catch (error: any) {
           let exceptionMessage = await this.getExceptionMessage.call(
             this,
