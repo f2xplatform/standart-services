@@ -32,3 +32,24 @@ export function generate400Error(result: {
     },
   };
 }
+
+export function generateApiError(apiResult: any, data?: any) {
+  if (
+    apiResult.error?.message ===
+    "Request validation failed. Check inner errors for more details"
+  ) {
+    return {
+      errorCode: apiResult.error?.innerErrors[0]?.code,
+      errorText: apiResult.error?.innerErrors[0]?.message,
+      errorTrace: apiResult,
+      errorData: data,
+    };
+  } else {
+    return {
+      errorCode: apiResult.error?.code,
+      errorText: apiResult.error?.message,
+      errorTrace: apiResult,
+      errorData: data,
+    };
+  }
+}
