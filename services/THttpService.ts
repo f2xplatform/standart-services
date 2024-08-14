@@ -11,7 +11,7 @@ export const SUB_REQUEST_HEADERS_ARRAY = [
 
 export interface IHttpServiceEnv extends IBaseServiceEnv {
   q_access: Queue<any>;
-  std_analytics: AnalyticsEngineDataset
+  // std_analytics: AnalyticsEngineDataset
 }
 
 export type TRequestHttpParams = {
