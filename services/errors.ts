@@ -1,4 +1,4 @@
-export function generateStateInvalid(): any {
+export function generateStateInvalidError(): any {
   return {
     responseStatus: 400,
     responseError: {
