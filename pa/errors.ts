@@ -22,6 +22,7 @@ export function generate400Error(result: {
   code: string;
   message: string;
   trace: any;
+  data: any
 }) {
   return {
     responseStatus: 400,
@@ -29,6 +30,7 @@ export function generate400Error(result: {
       errorCode: result.code,
       errorText: result.message,
       errorTrace: result.trace,
+      errorData: result.data
     },
   };
 }
