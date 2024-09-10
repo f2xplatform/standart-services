@@ -12,7 +12,7 @@ export function returnDeviceData(userF2xAgent: string) {
         deviceId: headerObj["deviceId"],
         appVersion: headerObj["app"] + " " + headerObj["app_v"],
         os: headerObj?.["os"] + " " + headerObj["os_v"],
-        osType: headerObj?.["os"]?.toLowerCase() === "android" ? 1 : 0,
+        osType: headerObj?.["os"]?.toLowerCase() === "android" ? (headerObj["model"]?.toLowerCase()?.includes("hauwei") ? 2 : 1) : 0,
         deviceDescription: headerObj["model"],
         app: headerObj["app"],
         lang: headerObj["lang"],
