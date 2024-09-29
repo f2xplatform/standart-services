@@ -148,3 +148,18 @@ export function shieldingStr(type:string, str: string, ) {
     return newStr;
   }
 }
+
+export const converToHexString = (arr: Uint8Array) => {
+  const hashArray = Array.from(arr);
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join(""); // convert bytes to hex string
+  return hashHex;
+};
+
+export const createShaHash = async (message: string, algorithm: string) => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(message);
+  const hash = await crypto.subtle.digest(algorithm, data);
+  return new Uint8Array(hash);
+};
