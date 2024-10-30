@@ -7,6 +7,8 @@ export const SUB_REQUEST_HEADERS_ARRAY = [
   "x-real-ip",
   "x-requested-with",
   "user-agent",
+  "f2x_request_id", 
+  "f2x_hmac"
 ];
 
 export interface IHttpServiceEnv extends IBaseServiceEnv {
