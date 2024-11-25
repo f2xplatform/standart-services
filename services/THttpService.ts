@@ -7,6 +7,9 @@ export const SUB_REQUEST_HEADERS_ARRAY = [
   "x-real-ip",
   "x-requested-with",
   "user-agent",
+  "f2x_request_id", 
+  "f2x_hmac",
+  "f2x_user_agent"
 ];
 
 export interface IHttpServiceEnv extends IBaseServiceEnv {
@@ -61,7 +64,7 @@ export abstract class THttpService extends TBaseService {
         }
       }
     );
-    let newHeaders = this.requestHttpParams.ip?.length ? Object.assign({"X-Forwarded-For": this.requestHttpParams.ip}, headers, Object.fromEntries(filteredHeaders)) : Object.assign({}, headers, Object.fromEntries(filteredHeaders));
+    let newHeaders = this.requestHttpParams.ip?.length ? Object.assign({"X-Forwarded-For": this.requestHttpParams.ip}, Object.fromEntries(filteredHeaders), headers) : Object.assign({}, Object.fromEntries(filteredHeaders), headers);
     return await super.callHttp(url, method, params, newHeaders, cf);
   }
 
