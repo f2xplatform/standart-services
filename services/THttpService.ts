@@ -331,6 +331,99 @@ export abstract class THttpService extends TBaseService {
     }
   }
 
+  async handleHttpRequest(env: IHttpServiceEnv) {
+    try {
+      for (let pattern of this.requestUrlPatterns) {
+        let patternParam: {
+          pathname: string;
+          search?: string;
+        } = { pathname: pattern.pathname };
+
+        if (pattern.search) {
+          patternParam.search = pattern.search;
+        }
+        let urlPattern = new URLPattern(patternParam);
+        if (
+          !urlPattern.test(this.requestHttpParams.url) ||
+          this.requestHttpParams.method !== pattern.method
+        )
+          continue;
+
+        let result;
+        try {
+          result = await pattern.func.call(
+            this,
+            env,
+            this,
+            pattern,
+            this.requestHttpParams
+          );
+        } catch (error: any) {
+          let exceptionMessage = await this.getExceptionMessage.call(
+            this,
+            error,
+            this.requestHttpParams.url,
+            this.requestHttpParams.body
+          );
+          return await this.generateResponseError(
+            400,
+            "VERIFICATION_FAILED",
+            "Bad params",
+            exceptionMessage
+          );
+        }
+
+        if (
+          result?.responseError &&
+          Object.keys(result?.responseError).length
+        ) {
+          return await this.generateResponseError(
+            result.responseStatus,
+            result.responseError?.errorCode
+              ? result.responseError?.errorCode
+              : `API_ERROR`,
+            result.responseError?.errorText
+              ? result.responseError?.errorText
+              : `Error on ${this.requestHttpParams.url}`,
+            result.responseError?.errorTrace
+              ? result.responseError?.errorTrace
+              : null,
+            result.responseError?.errorData
+              ? result.responseError?.errorData
+              : null
+          );
+        }
+
+        if (result?.responseResult) {
+          return await this.generateResponseOK(
+            JSON.stringify(result.responseResult, null, 2),
+            result.responseStatus
+          );
+        }
+      }
+
+      return await this.generateResponseError(
+        404,
+        `NOT_FOUND`,
+        "Data not found",
+        null
+      );
+    } catch (error: any) {
+      let exceptionMessage = await this.getExceptionMessage.call(
+        this,
+        error,
+        this.requestHttpParams.url,
+        this.requestHttpParams.body
+      );
+      return await this.generateResponseError(
+        400,
+        "VERIFICATION_FAILED",
+        "Bad params",
+        exceptionMessage
+      );
+    }
+  }
+
   async generateResponseError(
     statusCode: number,
     errorCode: string,

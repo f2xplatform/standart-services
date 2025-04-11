@@ -1,4 +1,4 @@
-export function stringToBuffer(str: string) {
+export function stringToBuffer(str: string): any {
   let bufView = new Uint8Array(str.length);
   for (let i = 0, strLen = str.length; i < strLen; i++) {
     bufView[i] = str.charCodeAt(i);
@@ -6,14 +6,14 @@ export function stringToBuffer(str: string) {
   return bufView;
 }
 
-export function bufferToString(buf: ArrayBuffer) {
+export function bufferToString(buf: ArrayBuffer | Uint8Array<ArrayBuffer>) {
   return String.fromCharCode.apply(null, new Uint8Array(buf));
 }
 
 export async function encrypt(
   kvValue: string,
   kvKey: string,
-  iv: Uint8Array,
+  iv: any,
   cryptoPass: string
 ) {
   const keyMaterial = await crypto.subtle.importKey(
@@ -44,7 +44,7 @@ export async function encrypt(
 export async function decrypt(
   kvValue: string,
   kvKey: string,
-  iv: Uint8Array,
+  iv: any,
   cryptoPass: string
 ) {
   const keyMaterial = await crypto.subtle.importKey(
