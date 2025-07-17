@@ -157,7 +157,7 @@ export abstract class TBaseService {
     stub: DurableObject,
     key: string,
     value: string,
-    expire: number,
+    expire?: number,
     meta?: { [key: string]: any },
     cryptoPass?: string,
     clear?: number
@@ -165,7 +165,7 @@ export abstract class TBaseService {
     let params: {
       key: string;
       value: string;
-      expire: number;
+      expire?: number;
       meta?: { [key: string]: any };
       clear?: number
     } = {
