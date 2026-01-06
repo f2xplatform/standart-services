@@ -1,6 +1,6 @@
 export function returnDeviceData(userF2xAgent: string) {
     if (userF2xAgent) {
-      let headerArr = userF2xAgent.split("; ");
+      let headerArr = userF2xAgent.replaceAll("; ", ";").split(";");
       let headerObj = {};
   
       for (let param of headerArr) {
