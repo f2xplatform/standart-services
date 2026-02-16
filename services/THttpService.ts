@@ -59,7 +59,8 @@ export abstract class THttpService extends TBaseService {
     method: string,
     params?: BodyInit,
     headers?: {},
-    cf?: RequestInitCfProperties
+    cf?: RequestInitCfProperties,
+    redirect?: string
   ) {
     let filteredHeaders = Object.entries(this.requestHttpParams.headers).filter(
       (head) => {
@@ -69,7 +70,7 @@ export abstract class THttpService extends TBaseService {
       }
     );
     let newHeaders = this.requestHttpParams.ip?.length ? Object.assign({"X-Forwarded-For": this.requestHttpParams.ip}, Object.fromEntries(filteredHeaders), headers) : Object.assign({}, Object.fromEntries(filteredHeaders), headers);
-    return await super.callHttp(url, method, params, newHeaders, cf);
+    return await super.callHttp(url, method, params, newHeaders, cf, redirect);
   }
 
   async callService(
