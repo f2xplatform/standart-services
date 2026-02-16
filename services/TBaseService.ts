@@ -253,7 +253,8 @@ export abstract class TBaseService {
     method: string,
     body?: BodyInit,
     additionalHeaders?: {},
-    cf?: RequestInitCfProperties
+    cf?: RequestInitCfProperties,
+    redirect?: string
   ) {
     let headers = {
       "Content-Type": "application/json",
@@ -269,6 +270,7 @@ export abstract class TBaseService {
       headers: {};
       body?: BodyInit;
       cf?: RequestInitCfProperties;
+      redirect?: string
     } = {
       method: method,
       headers: headers,
@@ -280,6 +282,10 @@ export abstract class TBaseService {
 
     if (cf) {
       init.cf = cf;
+    }
+
+    if(redirect) {
+      init.redirect = redirect
     }
 
     return init;
@@ -411,11 +417,12 @@ export abstract class TBaseService {
     method: string,
     params?: BodyInit,
     headers?: {},
-    cf?: RequestInitCfProperties
+    cf?: RequestInitCfProperties,
+    redirect?: string
   ) {
     let request = new Request(
       url,
-      this.generateHttpInit(method, params, headers, cf)
+      this.generateHttpInit(method, params, headers, cf, redirect)
     );
     if (this.trace) {
       let reqMessage = await this.getTraceMessageHttpRequest(request);
