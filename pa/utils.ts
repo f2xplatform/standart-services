@@ -57,7 +57,7 @@ export function preciseWithdraw(a: number, b: number) {
 function countDecimals(num: number) {
   if (!num) return 0;
   if (Math.floor(num) === num) return 0; // Для целых чисел
-  return num.toString().split(".")[1].length || 0;
+  return num.toString()?.split(".")?.[1]?.length || 0;
 }
 
 export function parseFloatFloor(num: number | string, decimalPlaces: number) {
