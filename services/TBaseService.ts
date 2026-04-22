@@ -400,7 +400,8 @@ export abstract class TBaseService {
     url: string,
     method: string,
     params?: BodyInit,
-    headers?: {}
+    headers?: {},
+    contentType?: string
   ): Promise<any> {
     let service = env[name] as Fetcher;
     let serviceUrl = `https://${name}/${url}`
@@ -409,6 +410,11 @@ export abstract class TBaseService {
       this.generateHttpInit(method, params, headers)
     );
     this.lastServiceCall = {url: serviceUrl, statusCode: response.status }
+
+    if(contentType === "blob") {
+      return await response.blob();
+    }
+    
     return await response.json();
   }
 
