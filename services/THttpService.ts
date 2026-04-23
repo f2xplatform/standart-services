@@ -79,7 +79,8 @@ export abstract class THttpService extends TBaseService {
     url: string,
     method: string,
     params?: BodyInit,
-    headers?: {}
+    headers?: {},
+    contentType?: string
   ): Promise<any> {
     let filteredHeaders = Object.entries(this.requestHttpParams.headers).filter(
       (head) => {
@@ -89,7 +90,7 @@ export abstract class THttpService extends TBaseService {
       }
     );
     let newHeaders = Object.assign({}, headers, Object.fromEntries(filteredHeaders));
-    return await super.callService(env, name, url, method, params, newHeaders);
+    return await super.callService(env, name, url, method, params, newHeaders, contentType);
   }
 
   get requestUrlPatterns(): Array<TRequestUrlPattern> {
@@ -428,8 +429,9 @@ export abstract class THttpService extends TBaseService {
 
         if (result?.responseResult) {
           return await this.generateResponseOK(
-            JSON.stringify(result.responseResult, null, 2),
-            result.responseStatus
+            result.noJson ? result.responseResult : JSON.stringify(result.responseResult, null, 2),
+            result.responseStatus,
+            result.responseHeaders
           );
         }
       }
