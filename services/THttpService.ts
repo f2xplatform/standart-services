@@ -429,7 +429,7 @@ export abstract class THttpService extends TBaseService {
 
         if (result?.responseResult) {
           return await this.generateResponseOK(
-            JSON.stringify(result.responseResult, null, 2),
+            result.noJson ? result.responseResult : JSON.stringify(result.responseResult, null, 2),
             result.responseStatus,
             result.responseHeaders
           );
