@@ -1,7 +1,9 @@
 import { bufferToString, decrypt, stringToBuffer, encrypt } from "./utils";
 
 export interface IQueueEnv {}
-export interface IBindingEnv {}
+export interface IBindingEnv {
+  service_log: any
+}
 
 export interface IBaseServiceEnv extends IQueueEnv, IBindingEnv {
   kv_env: KVNamespace;
@@ -10,7 +12,7 @@ export interface IBaseServiceEnv extends IQueueEnv, IBindingEnv {
   TRACE: "0" | "1" | "2";
   INSTANCE: "stage" | "main" | "test" | "dev";
   LOG: "no" | "error" | "all";
-  EXCEPTION: "0" | "1";
+  EXCEPTION: "0" | "1"
 }
 
 export abstract class TBaseService {
@@ -18,6 +20,7 @@ export abstract class TBaseService {
   protected readonly q_trace: Queue<any>;
   protected readonly q_exception: Queue<any>;
   protected readonly kv_env: KVNamespace;
+  protected readonly service_log: any
   private _id: string = "";
   private _trace: number = 0;
   private _log: "no" | "error" | "all" = "no";
@@ -25,10 +28,10 @@ export abstract class TBaseService {
   abstract maskArray: Array<string>;
   readonly INSTANCE: "stage" | "main" | "dev" | "test";
   protected version: string;
-  protected lastServiceCall: {url: string, statusCode: number};
-  protected lastHttpCall: {url: string, statusCode: number};
+  protected lastServiceCall: { url: string; statusCode: number };
+  protected lastHttpCall: { url: string; statusCode: number };
 
-  constructor(env: IBaseServiceEnv, name: string, version:string) {
+  constructor(env: IBaseServiceEnv, name: string, version: string) {
     this.name = name;
     this.kv_env = env.kv_env;
     this.id = this.getRandomID();
@@ -167,13 +170,13 @@ export abstract class TBaseService {
       value: string;
       expire?: number;
       meta?: { [key: string]: any };
-      clear?: number
+      clear?: number;
     } = {
       key: key,
       value: value,
       meta: meta,
       expire: expire,
-      clear: clear
+      clear: clear,
     };
 
     if (cryptoPass) {
@@ -270,7 +273,7 @@ export abstract class TBaseService {
       headers: {};
       body?: BodyInit;
       cf?: RequestInitCfProperties;
-      redirect?: string
+      redirect?: string;
     } = {
       method: method,
       headers: headers,
@@ -284,8 +287,8 @@ export abstract class TBaseService {
       init.cf = cf;
     }
 
-    if(redirect) {
-      init.redirect = redirect
+    if (redirect) {
+      init.redirect = redirect;
     }
 
     return init;
@@ -328,10 +331,34 @@ export abstract class TBaseService {
     return JSON.stringify(message, null, 2);
   }
 
+  protected async getLogMessageHttpRequest(request: Request, requestTime: number) {
+    let requestClone = request.clone();
+    let requestHeaders = Object.fromEntries(requestClone.headers);
+    let requestURL = new URL(requestClone.url);
+    let requestMethod = requestClone.method.toLowerCase();
+    let requestBody = await requestClone.text();
+
+    let message: {
+      requestTime: number;
+      requestURL: URL;
+      requestMethod: string;
+      requestBody: string;
+      requestHeaders: { [key: string]: string };
+    } = {
+      requestTime: requestTime,
+      requestURL: requestURL,
+      requestMethod: requestMethod,
+      requestBody: requestBody,
+      requestHeaders: requestHeaders,
+    };
+
+    return message;
+  }
+
   protected async getExceptionMessage(exception: any, url: string, body: any) {
     let exceptionMessage: {
-      lastHttpCall: {url:string, statusCode: number},
-      lastServiceCall: {url:string, statusCode: number},
+      lastHttpCall: { url: string; statusCode: number };
+      lastServiceCall: { url: string; statusCode: number };
       url: string;
       body: any;
       code: string;
@@ -357,7 +384,7 @@ export abstract class TBaseService {
         ),
       };
       await this.q_exception.send(queueMessage);
-      console.log(queueMessage)
+      console.log(queueMessage);
     }
     if (this.trace) {
       exceptionMessage.stack = exception.stack;
@@ -370,7 +397,7 @@ export abstract class TBaseService {
     let responseUrl = responseClone.url;
     let responseHeaders = Object.fromEntries(responseClone.headers);
     let responseStatus = responseClone.status;
-    let responseBody:any = await responseClone.text();
+    let responseBody: any = await responseClone.text();
     await this.processMaskArray(responseBody);
 
     let message: {
@@ -394,6 +421,24 @@ export abstract class TBaseService {
     return JSON.stringify(message, null, 2);
   }
 
+  protected async getLogMessageHttpResponse(response: Response, responseTime: number) {
+    let responseClone = response.clone();
+    let responseStatus = responseClone.status;
+    let responseBody: any = await responseClone.text();
+
+    let message: {
+      responseStatus: number;
+      responseBody: string;
+      responseTime: number
+    } = {
+      responseStatus: responseStatus,
+      responseBody: responseBody,
+      responseTime: responseTime
+    };
+
+    return message;
+  }
+
   async callService(
     env: IBaseServiceEnv,
     name: keyof IBindingEnv,
@@ -404,17 +449,17 @@ export abstract class TBaseService {
     contentType?: string
   ): Promise<any> {
     let service = env[name] as Fetcher;
-    let serviceUrl = `https://${name}/${url}`
+    let serviceUrl = `https://${name}/${url}`;
     let response = await service.fetch(
       serviceUrl,
       this.generateHttpInit(method, params, headers)
     );
-    this.lastServiceCall = {url: serviceUrl, statusCode: response.status }
+    this.lastServiceCall = { url: serviceUrl, statusCode: response.status };
 
-    if(contentType === "blob") {
+    if (contentType === "blob") {
       return await response.blob();
     }
-    
+
     return await response.json();
   }
 
@@ -430,15 +475,23 @@ export abstract class TBaseService {
       url,
       this.generateHttpInit(method, params, headers, cf, redirect)
     );
+    let requestTime = new Date().getTime();
+    let logRequestMessage = await this.getLogMessageHttpRequest(request, requestTime);
     if (this.trace) {
       let reqMessage = await this.getTraceMessageHttpRequest(request);
       await this.traceMessage(reqMessage, "http_request");
     }
+
     let response = await fetch(request);
-    this.lastHttpCall = {url: url, statusCode: response.status }
+
+    let responseTime = new Date().getTime();
+    let logResponseMessage = await this.getLogMessageHttpResponse(response, responseTime);
+    await this.logMessage(logRequestMessage, logResponseMessage);
+
+    this.lastHttpCall = { url: url, statusCode: response.status };
     if (this.trace) {
       let respMessage = await this.getTraceMessageHttpResponse(response);
-      await this.traceMessage(respMessage, "http_response");
+      await this.traceMessage(respMessage, "http_response", undefined, responseTime - requestTime);
     }
     return response;
   }
@@ -453,18 +506,62 @@ export abstract class TBaseService {
     await queueStorage.send(result);
   }
 
-  protected async traceMessage(message: string, type: string, error?: {}) {
+  protected async traceMessage(message: string, type: string, error?: {}, deltatime?: number) {    
     let result = {
       serviceName: this.name,
       type: type,
       id: this.id,
       time: new Date(Date.now()).toISOString(),
+      deltatime: deltatime,
       error: error,
       message: this.maskInfo(message).slice(0, 5000),
       trace: this.trace,
     };
-    await this.q_trace.send(result);
-    console.log(result)
+    await this.service_log.saveTraceLog(this.id, result)
+    this.q_trace.send(result);
+    console.log(result);
+  }
+
+  protected async logMessage(
+    requestMessage: {
+      requestTime: number;
+      requestURL: URL;
+      requestMethod: string;
+      requestBody: string;
+      requestHeaders: { [key: string]: string };
+    },
+    responseMessage: {
+      responseStatus: number;
+      responseBody: string;
+      responseTime: number
+    }
+  ) {
+    let in_json: any = requestMessage.requestBody;
+    let out_json: any = responseMessage.responseBody;
+
+    try {
+      in_json = JSON.parse(in_json);
+    } catch {}
+
+    try {
+      out_json = JSON.parse(out_json);
+    } catch {}
+
+    await this.service_log.saveJsonLog({
+      serviceName: this.name,
+      requestTime: requestMessage.requestTime,
+      url: requestMessage.requestURL,
+      method: requestMessage.requestMethod,
+      status: responseMessage.responseStatus,
+      responseTime: responseMessage.responseTime,
+      in_json: in_json,
+      out_json: out_json,
+      ip: requestMessage.requestHeaders["f2x_ip"]
+        ? requestMessage.requestHeaders["f2x_ip"]
+        : requestMessage.requestHeaders["x-real-ip"],
+      f2xUserAgent: requestMessage.requestHeaders["f2x_user_agent"],
+      f2xRequestId: requestMessage.requestHeaders["f2x_request_id"],
+    });
   }
 
   private getRandomID() {
