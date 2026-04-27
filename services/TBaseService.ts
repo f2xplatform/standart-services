@@ -42,6 +42,7 @@ export abstract class TBaseService {
     this.INSTANCE = env.INSTANCE;
     this.log = env.LOG;
     this.version = version;
+    this.service_log = env.service_log
   }
 
   get trace(): number {
