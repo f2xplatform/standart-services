@@ -517,7 +517,9 @@ export abstract class TBaseService {
       message: this.maskInfo(message).slice(0, 5000),
       trace: this.trace,
     };
+    try{
     await this.service_log.saveServiceTraceLog(this.id, result)
+    } catch {}
     this.q_trace.send(result);
     console.log(result);
   }
@@ -536,6 +538,7 @@ export abstract class TBaseService {
       responseTime: number
     }
   ) {
+    try{
     let in_json: any = requestMessage.requestBody;
     let out_json: any = responseMessage.responseBody;
 
@@ -562,6 +565,7 @@ export abstract class TBaseService {
       f2xUserAgent: requestMessage.requestHeaders["f2x_user_agent"],
       f2xRequestId: requestMessage.requestHeaders["f2x_request_id"],
     });
+  } catch {}
   }
 
   private getRandomID() {
