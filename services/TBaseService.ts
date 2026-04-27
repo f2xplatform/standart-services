@@ -517,7 +517,7 @@ export abstract class TBaseService {
       message: this.maskInfo(message).slice(0, 5000),
       trace: this.trace,
     };
-    await this.service_log.saveTraceLog(this.id, result)
+    await this.service_log.saveServiceTraceLog(this.id, result)
     this.q_trace.send(result);
     console.log(result);
   }
@@ -540,14 +540,14 @@ export abstract class TBaseService {
     let out_json: any = responseMessage.responseBody;
 
     try {
-      in_json = JSON.parse(in_json);
+      in_json = JSON.parse(this.maskInfo(in_json));
     } catch {}
 
     try {
-      out_json = JSON.parse(out_json);
+      out_json = JSON.parse(this.maskInfo(out_json));
     } catch {}
 
-    await this.service_log.saveJsonLog({
+    await this.service_log.saveServiceHttpLog({
       serviceName: this.name,
       requestTime: requestMessage.requestTime,
       url: requestMessage.requestURL,
