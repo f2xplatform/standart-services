@@ -514,7 +514,7 @@ export abstract class TBaseService {
       trace: this.trace,
     };
     try {
-      await this.service_log.saveServiceTraceLog(this.id, result);
+      await this.service_log.saveServiceTraceLog(result);
     } catch (e) {
       console.log("saveServiceTraceLogException", e);
     }
