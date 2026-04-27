@@ -418,7 +418,8 @@ export abstract class TBaseService {
 
   protected async getLogMessageHttpResponse(responseClone: Response, responseBody: string, responseTime: number) {
     let responseStatus = responseClone.status;
-
+    await this.processMaskArray(responseBody);
+    
     let message: {
       responseStatus: number;
       responseBody: string;
