@@ -20,7 +20,7 @@ export abstract class TBaseService {
   protected readonly q_trace: Queue<any>;
   protected readonly q_exception: Queue<any>;
   protected readonly kv_env: KVNamespace;
-  protected readonly service_log: any
+  protected readonly service_log: any;
   private _id: string = "";
   private _trace: number = 0;
   private _log: "no" | "error" | "all" = "no";
@@ -42,7 +42,7 @@ export abstract class TBaseService {
     this.INSTANCE = env.INSTANCE;
     this.log = env.LOG;
     this.version = version;
-    this.service_log = env.service_log
+    this.service_log = env.service_log;
   }
 
   get trace(): number {
@@ -304,7 +304,10 @@ export abstract class TBaseService {
 
   async processMaskArray(responseBody: any) {}
 
-  protected async getTraceMessageHttpRequest(requestClone: Request, requestBody: string) {
+  protected async getTraceMessageHttpRequest(
+    requestClone: Request,
+    requestBody: string
+  ) {
     let requestHeaders = Object.fromEntries(requestClone.headers);
     let requestURL = new URL(requestClone.url);
     let requestMethod = requestClone.method.toLowerCase();
@@ -330,7 +333,11 @@ export abstract class TBaseService {
     return JSON.stringify(message, null, 2);
   }
 
-  protected async getLogMessageHttpRequest(requestClone: Request, requestBody: string, requestTime: number) {
+  protected async getLogMessageHttpRequest(
+    requestClone: Request,
+    requestBody: string,
+    requestTime: number
+  ) {
     let requestHeaders = Object.fromEntries(requestClone.headers);
     let requestURL = requestClone.url;
     let requestMethod = requestClone.method.toLowerCase();
@@ -389,11 +396,17 @@ export abstract class TBaseService {
     return this.maskInfo(JSON.stringify(exceptionMessage, null, 2));
   }
 
-  protected async getTraceMessageHttpResponse(responseClone: Response, responseBody: string) {
+  protected async getTraceMessageHttpResponse(
+    responseClone: Response,
+    responseBody: string
+  ) {
     let responseUrl = responseClone.url;
     let responseHeaders = Object.fromEntries(responseClone.headers);
     let responseStatus = responseClone.status;
-    await this.processMaskArray(responseBody);
+
+    try {
+      await this.processMaskArray(responseBody);
+    } catch {}
 
     let message: {
       url: string;
@@ -416,18 +429,24 @@ export abstract class TBaseService {
     return JSON.stringify(message, null, 2);
   }
 
-  protected async getLogMessageHttpResponse(responseClone: Response, responseBody: string, responseTime: number) {
+  protected async getLogMessageHttpResponse(
+    responseClone: Response,
+    responseBody: string,
+    responseTime: number
+  ) {
     let responseStatus = responseClone.status;
-    await this.processMaskArray(responseBody);
+    try {
+      await this.processMaskArray(responseBody);
+    } catch {}
 
     let message: {
       responseStatus: number;
       responseBody: string;
-      responseTime: number
+      responseTime: number;
     } = {
       responseStatus: responseStatus,
       responseBody: this.maskInfo(responseBody),
-      responseTime: responseTime
+      responseTime: responseTime,
     };
 
     return message;
@@ -472,9 +491,16 @@ export abstract class TBaseService {
     let requestTime = new Date().getTime();
     let clonedRequest = request.clone();
     let requestBody = await clonedRequest.text();
-    let logRequestMessage = await this.getLogMessageHttpRequest(clonedRequest, requestBody, requestTime);
+    let logRequestMessage = await this.getLogMessageHttpRequest(
+      clonedRequest,
+      requestBody,
+      requestTime
+    );
     if (this.trace) {
-      let reqMessage = await this.getTraceMessageHttpRequest(clonedRequest, requestBody);
+      let reqMessage = await this.getTraceMessageHttpRequest(
+        clonedRequest,
+        requestBody
+      );
       await this.traceMessage(reqMessage, "http_request");
     }
 
@@ -482,13 +508,25 @@ export abstract class TBaseService {
     let responseTime = new Date().getTime();
     let clonedResponse = response.clone();
     let responseBody: any = await clonedResponse.text();
-    let logResponseMessage = await this.getLogMessageHttpResponse(clonedResponse, responseBody, responseTime);
+    let logResponseMessage = await this.getLogMessageHttpResponse(
+      clonedResponse,
+      responseBody,
+      responseTime
+    );
     await this.logMessage(logRequestMessage, logResponseMessage);
 
     this.lastHttpCall = { url: url, statusCode: response.status };
     if (this.trace) {
-      let respMessage = await this.getTraceMessageHttpResponse(clonedResponse, responseBody);
-      await this.traceMessage(respMessage, "http_response", undefined, responseTime - requestTime);
+      let respMessage = await this.getTraceMessageHttpResponse(
+        clonedResponse,
+        responseBody
+      );
+      await this.traceMessage(
+        respMessage,
+        "http_response",
+        undefined,
+        responseTime - requestTime
+      );
     }
     return response;
   }
@@ -503,7 +541,12 @@ export abstract class TBaseService {
     await queueStorage.send(result);
   }
 
-  protected async traceMessage(message: string, type: string, error?: {}, deltatime?: number) {    
+  protected async traceMessage(
+    message: string,
+    type: string,
+    error?: {},
+    deltatime?: number
+  ) {
     let result = {
       serviceName: this.name,
       type: type,
@@ -534,7 +577,7 @@ export abstract class TBaseService {
     responseMessage: {
       responseStatus: number;
       responseBody: string;
-      responseTime: number
+      responseTime: number;
     }
   ) {
     try {
