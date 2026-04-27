@@ -345,7 +345,7 @@ export abstract class TBaseService {
       requestTime: requestTime,
       requestURL: requestURL,
       requestMethod: requestMethod,
-      requestBody: requestBody,
+      requestBody: this.maskInfo(requestBody),
       requestHeaders: requestHeaders,
     };
 
@@ -419,14 +419,14 @@ export abstract class TBaseService {
   protected async getLogMessageHttpResponse(responseClone: Response, responseBody: string, responseTime: number) {
     let responseStatus = responseClone.status;
     await this.processMaskArray(responseBody);
-    
+
     let message: {
       responseStatus: number;
       responseBody: string;
       responseTime: number
     } = {
       responseStatus: responseStatus,
-      responseBody: responseBody,
+      responseBody: this.maskInfo(responseBody),
       responseTime: responseTime
     };
 
@@ -542,11 +542,11 @@ export abstract class TBaseService {
       let out_json: any = responseMessage.responseBody;
 
       try {
-        in_json = JSON.parse(this.maskInfo(in_json));
+        in_json = JSON.parse(in_json);
       } catch {}
 
       try {
-        out_json = JSON.parse(this.maskInfo(out_json));
+        out_json = JSON.parse(out_json);
       } catch {}
 
       await this.service_log.saveServiceHttpLog({
