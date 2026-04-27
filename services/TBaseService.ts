@@ -304,11 +304,10 @@ export abstract class TBaseService {
 
   async processMaskArray(responseBody: any) {}
 
-  protected async getTraceMessageHttpRequest(requestClone: Request) {
+  protected async getTraceMessageHttpRequest(requestClone: Request, requestBody: string) {
     let requestHeaders = Object.fromEntries(requestClone.headers);
     let requestURL = new URL(requestClone.url);
     let requestMethod = requestClone.method.toLowerCase();
-    let requestBody = await requestClone.text();
 
     let message: {
       requestURL: URL;
@@ -331,15 +330,14 @@ export abstract class TBaseService {
     return JSON.stringify(message, null, 2);
   }
 
-  protected async getLogMessageHttpRequest(requestClone: Request, requestTime: number) {
+  protected async getLogMessageHttpRequest(requestClone: Request, requestBody: string, requestTime: number) {
     let requestHeaders = Object.fromEntries(requestClone.headers);
-    let requestURL = new URL(requestClone.url);
+    let requestURL = requestClone.url;
     let requestMethod = requestClone.method.toLowerCase();
-    let requestBody = await requestClone.text();
 
     let message: {
       requestTime: number;
-      requestURL: URL;
+      requestURL: string;
       requestMethod: string;
       requestBody: string;
       requestHeaders: { [key: string]: string };
@@ -391,11 +389,10 @@ export abstract class TBaseService {
     return this.maskInfo(JSON.stringify(exceptionMessage, null, 2));
   }
 
-  protected async getTraceMessageHttpResponse(responseClone: Response) {
+  protected async getTraceMessageHttpResponse(responseClone: Response, responseBody: string) {
     let responseUrl = responseClone.url;
     let responseHeaders = Object.fromEntries(responseClone.headers);
     let responseStatus = responseClone.status;
-    let responseBody: any = await responseClone.text();
     await this.processMaskArray(responseBody);
 
     let message: {
@@ -419,9 +416,8 @@ export abstract class TBaseService {
     return JSON.stringify(message, null, 2);
   }
 
-  protected async getLogMessageHttpResponse(responseClone: Response, responseTime: number) {
+  protected async getLogMessageHttpResponse(responseClone: Response, responseBody: string, responseTime: number) {
     let responseStatus = responseClone.status;
-    let responseBody: any = await responseClone.text();
 
     let message: {
       responseStatus: number;
@@ -474,21 +470,23 @@ export abstract class TBaseService {
     );
     let requestTime = new Date().getTime();
     let clonedRequest = request.clone();
-    let logRequestMessage = await this.getLogMessageHttpRequest(clonedRequest, requestTime);
+    let requestBody = await clonedRequest.text();
+    let logRequestMessage = await this.getLogMessageHttpRequest(clonedRequest, requestBody, requestTime);
     if (this.trace) {
-      let reqMessage = await this.getTraceMessageHttpRequest(clonedRequest);
+      let reqMessage = await this.getTraceMessageHttpRequest(clonedRequest, requestBody);
       await this.traceMessage(reqMessage, "http_request");
     }
 
     let response = await fetch(request);
-    let clonedResponse = response.clone();
     let responseTime = new Date().getTime();
-    let logResponseMessage = await this.getLogMessageHttpResponse(clonedResponse, responseTime);
+    let clonedResponse = response.clone();
+    let responseBody: any = await clonedResponse.text();
+    let logResponseMessage = await this.getLogMessageHttpResponse(clonedResponse, responseBody, responseTime);
     await this.logMessage(logRequestMessage, logResponseMessage);
 
     this.lastHttpCall = { url: url, statusCode: response.status };
     if (this.trace) {
-      let respMessage = await this.getTraceMessageHttpResponse(clonedResponse);
+      let respMessage = await this.getTraceMessageHttpResponse(clonedResponse, responseBody);
       await this.traceMessage(respMessage, "http_response", undefined, responseTime - requestTime);
     }
     return response;
@@ -515,9 +513,11 @@ export abstract class TBaseService {
       message: this.maskInfo(message).slice(0, 5000),
       trace: this.trace,
     };
-    try{
-    await this.service_log.saveServiceTraceLog(this.id, result)
-    } catch {}
+    try {
+      await this.service_log.saveServiceTraceLog(this.id, result);
+    } catch (e) {
+      console.log("saveServiceTraceLogException", e);
+    }
     this.q_trace.send(result);
     console.log(result);
   }
@@ -525,7 +525,7 @@ export abstract class TBaseService {
   protected async logMessage(
     requestMessage: {
       requestTime: number;
-      requestURL: URL;
+      requestURL: string;
       requestMethod: string;
       requestBody: string;
       requestHeaders: { [key: string]: string };
@@ -536,41 +536,36 @@ export abstract class TBaseService {
       responseTime: number
     }
   ) {
-    try{
-    let in_json: any = requestMessage.requestBody;
-    console.log("in_json", in_json);
-
-    let out_json: any = responseMessage.responseBody;
-    console.log("out_json", out_json);
-
     try {
-      in_json = JSON.parse(this.maskInfo(in_json));
-    } catch {}
+      let in_json: any = requestMessage.requestBody;
+      let out_json: any = responseMessage.responseBody;
 
-    try {
-      out_json = JSON.parse(this.maskInfo(out_json));
-    } catch {}
+      try {
+        in_json = JSON.parse(this.maskInfo(in_json));
+      } catch {}
 
-    let logBody = {
-      serviceName: this.name,
-      requestTime: requestMessage.requestTime,
-      url: requestMessage.requestURL,
-      method: requestMessage.requestMethod,
-      status: responseMessage.responseStatus,
-      responseTime: responseMessage.responseTime,
-      in_json: in_json,
-      out_json: out_json,
-      ip: requestMessage.requestHeaders["f2x_ip"]
-        ? requestMessage.requestHeaders["f2x_ip"]
-        : requestMessage.requestHeaders["x-real-ip"],
-      f2xUserAgent: requestMessage.requestHeaders["f2x_user_agent"],
-      f2xRequestId: requestMessage.requestHeaders["f2x_request_id"],
+      try {
+        out_json = JSON.parse(this.maskInfo(out_json));
+      } catch {}
+
+      await this.service_log.saveServiceHttpLog({
+        serviceName: this.name,
+        requestTime: requestMessage.requestTime,
+        url: requestMessage.requestURL,
+        method: requestMessage.requestMethod,
+        status: responseMessage.responseStatus,
+        responseTime: responseMessage.responseTime,
+        in_json: in_json,
+        out_json: out_json,
+        ip: requestMessage.requestHeaders["f2x_ip"]
+          ? requestMessage.requestHeaders["f2x_ip"]
+          : requestMessage.requestHeaders["x-real-ip"],
+        f2xUserAgent: requestMessage.requestHeaders["f2x_user_agent"],
+        f2xRequestId: requestMessage.requestHeaders["f2x_request_id"],
+      });
+    } catch (e) {
+      console.log("logMessageException", e);
     }
-    console.log("logBody", logBody)
-    await this.service_log.saveServiceHttpLog(logBody);
-  } catch(e) {
-  console.log("logMessage", e)
-  }
   }
 
   private getRandomID() {
