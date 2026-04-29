@@ -404,10 +404,6 @@ export abstract class TBaseService {
     let responseHeaders = Object.fromEntries(responseClone.headers);
     let responseStatus = responseClone.status;
 
-    try {
-      await this.processMaskArray(responseBody);
-    } catch {}
-
     let message: {
       url: string;
       responseStatus: number;
@@ -435,9 +431,6 @@ export abstract class TBaseService {
     responseTime: number
   ) {
     let responseStatus = responseClone.status;
-    try {
-      await this.processMaskArray(responseBody);
-    } catch {}
 
     let message: {
       responseStatus: number;
@@ -508,6 +501,11 @@ export abstract class TBaseService {
     let responseTime = new Date().getTime();
     let clonedResponse = response.clone();
     let responseBody: any = await clonedResponse.text();
+
+    try {
+      await this.processMaskArray(responseBody);
+    } catch {}
+    
     let logResponseMessage = await this.getLogMessageHttpResponse(
       clonedResponse,
       responseBody,
