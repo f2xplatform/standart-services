@@ -352,7 +352,7 @@ export abstract class TBaseService {
       requestTime: requestTime,
       requestURL: requestURL,
       requestMethod: requestMethod,
-      requestBody: this.maskInfo(requestBody),
+      requestBody: requestBody,
       requestHeaders: requestHeaders,
     };
 
@@ -445,7 +445,7 @@ export abstract class TBaseService {
       responseTime: number;
     } = {
       responseStatus: responseStatus,
-      responseBody: this.maskInfo(responseBody),
+      responseBody: responseBody,
       responseTime: responseTime,
     };
 
@@ -581,8 +581,8 @@ export abstract class TBaseService {
     }
   ) {
     try {
-      let in_json: any = requestMessage.requestBody;
-      let out_json: any = responseMessage.responseBody;
+      let in_json: any = this.maskInfo(requestMessage.requestBody);
+      let out_json: any = this.maskInfo(responseMessage.responseBody);
 
       try {
         in_json = JSON.parse(in_json);
