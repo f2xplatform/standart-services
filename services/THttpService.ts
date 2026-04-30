@@ -145,7 +145,9 @@ export abstract class THttpService extends TBaseService {
     this.initMaskedArray();
 
     if (this.trace) {
-      let message = await this.getTraceMessageHttpRequest(request);
+      let clonedRequest = request.clone();
+      let requestBody = await clonedRequest.text();
+      let message = await this.getTraceMessageHttpRequest(clonedRequest, requestBody);
       await this.traceMessage(message, "service_in");
     }
   }
@@ -489,7 +491,9 @@ export abstract class THttpService extends TBaseService {
       },
     });
     if (this.trace) {
-      let message = await this.getTraceMessageHttpResponse(response);
+      let clonedResponse = response.clone();
+      let responseBody = await clonedResponse.text();
+      let message = await this.getTraceMessageHttpResponse(clonedResponse, responseBody);
       await this.traceMessage(message, "service_out", error);
     }
     if (this.log === "error" || this.log === "all") {
@@ -522,7 +526,9 @@ export abstract class THttpService extends TBaseService {
     });
 
     if (this.trace) {
-      let message = await this.getTraceMessageHttpResponse(response);
+      let clonedResponse = response.clone();
+      let responseBody = await clonedResponse.text();
+      let message = await this.getTraceMessageHttpResponse(clonedResponse, responseBody);
       await this.traceMessage(message, "service_out");
     }
 
