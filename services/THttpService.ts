@@ -13,7 +13,7 @@ export const SUB_REQUEST_HEADERS_ARRAY = [
 ];
 
 export interface IHttpServiceEnv extends IBaseServiceEnv {
-  q_access: Queue<any>;
+  // q_access: Queue<any>;
   // std_analytics: AnalyticsEngineDataset
 }
 
@@ -40,14 +40,14 @@ export abstract class THttpService extends TBaseService {
   protected requestHttpParams = {} as TRequestHttpParams;
   private _requestUrlPatterns: Array<TRequestUrlPattern> =
     {} as Array<TRequestUrlPattern>;
-  protected readonly q_access: Queue<any>;
+  // protected readonly q_access: Queue<any>;
   abstract initMaskedArray()
   protected varsEnvArray: Array<string>;
   protected type: string;
 
   constructor(env: IHttpServiceEnv, name: string, version: string, type?: string) {
     super(env, name, version);
-    this.q_access = env.q_access;
+    // this.q_access = env.q_access;
     this.requestUrlPatterns = [] as Array<TRequestUrlPattern>;
     if(type) {
       this.type = type;
@@ -165,7 +165,7 @@ export abstract class THttpService extends TBaseService {
     });
     let vars = {
       TRACE: env.TRACE,
-      LOG: env.TRACE,
+      LOG: env.LOG,
       EXCEPTION: env.EXCEPTION,
       INSTANCE: env.INSTANCE,
       VERSION: this.version
@@ -241,26 +241,26 @@ export abstract class THttpService extends TBaseService {
     }
   }
 
-  protected async logAccess(
-    requestUrl: string,
-    requestMethod: string,
-    statusCode: number,
-    ip: string,
-    isError: "1" | "0"
-  ) {
-    let result = this.maskInfo(
-      JSON.stringify({
-        serviceName: this.name,
-        time: new Date(Date.now()).toISOString(),
-        requestUrl: requestUrl,
-        requestMethod: requestMethod,
-        statusCode: statusCode,
-        ip: ip,
-        isError: isError,
-      })
-    );
-    await this.q_access.send(JSON.parse(result));
-  }
+  // protected async logAccess(
+  //   requestUrl: string,
+  //   requestMethod: string,
+  //   statusCode: number,
+  //   ip: string,
+  //   isError: "1" | "0"
+  // ) {
+  //   let result = this.maskInfo(
+  //     JSON.stringify({
+  //       serviceName: this.name,
+  //       time: new Date(Date.now()).toISOString(),
+  //       requestUrl: requestUrl,
+  //       requestMethod: requestMethod,
+  //       statusCode: statusCode,
+  //       ip: ip,
+  //       isError: isError,
+  //     })
+  //   );
+  //   await this.q_access.send(JSON.parse(result));
+  // }
 
   async handleUrlRequest(env: IHttpServiceEnv) {
     try {
@@ -496,15 +496,15 @@ export abstract class THttpService extends TBaseService {
       let message = await this.getTraceMessageHttpResponse(clonedResponse, responseBody);
       await this.traceMessage(message, "service_out", error);
     }
-    if (this.log === "error" || this.log === "all") {
-      await this.logAccess(
-        this.requestHttpParams.url,
-        this.requestHttpParams.method,
-        response.status,
-        this.requestHttpParams.ip,
-        "1"
-      );
-    }
+    // if (this.log === "error" || this.log === "all") {
+    //   await this.logAccess(
+    //     this.requestHttpParams.url,
+    //     this.requestHttpParams.method,
+    //     response.status,
+    //     this.requestHttpParams.ip,
+    //     "1"
+    //   );
+    // }
 
     return response;
   }
@@ -532,15 +532,15 @@ export abstract class THttpService extends TBaseService {
       await this.traceMessage(message, "service_out");
     }
 
-    if (this.log === "all") {
-      await this.logAccess(
-        this.requestHttpParams.url,
-        this.requestHttpParams.method,
-        response.status,
-        this.requestHttpParams.ip,
-        "0"
-      );
-    }
+    // if (this.log === "all") {
+    //   await this.logAccess(
+    //     this.requestHttpParams.url,
+    //     this.requestHttpParams.method,
+    //     response.status,
+    //     this.requestHttpParams.ip,
+    //     "0"
+    //   );
+    // }
 
     return response;
   }
