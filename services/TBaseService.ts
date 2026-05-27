@@ -11,7 +11,7 @@ export interface IBaseServiceEnv extends IQueueEnv, IBindingEnv {
   q_exception: Queue<any>;
   TRACE: "0" | "1" | "2";
   INSTANCE: "stage" | "main" | "test" | "dev";
-  LOG: "no" | "error" | "all";
+  LOG: "0" | "1";
   EXCEPTION: "0" | "1"
 }
 
@@ -23,7 +23,7 @@ export abstract class TBaseService {
   protected readonly service_log: any;
   private _id: string = "";
   private _trace: number = 0;
-  private _log: "no" | "error" | "all" = "no";
+  private _log: number = 0;
   private _exception: number = 0;
   abstract maskArray: Array<string>;
   readonly INSTANCE: "stage" | "main" | "dev" | "test";
@@ -40,7 +40,7 @@ export abstract class TBaseService {
     this.q_trace = env.q_trace;
     this.q_exception = env.q_exception;
     this.INSTANCE = env.INSTANCE;
-    this.log = env.LOG;
+    this.log = env.LOG ? Number(env.LOG) : 0;
     this.version = version;
     this.service_log = env.service_log;
   }
@@ -59,10 +59,10 @@ export abstract class TBaseService {
     this._id = id;
   }
 
-  get log(): "no" | "error" | "all" {
+  get log(): number {
     return this._log;
   }
-  set log(log: "no" | "error" | "all") {
+  set log(log: number) {
     this._log = log;
   }
 
@@ -484,11 +484,7 @@ export abstract class TBaseService {
     let requestTime = new Date().getTime();
     let clonedRequest = request.clone();
     let requestBody = await clonedRequest.text();
-    let logRequestMessage = await this.getLogMessageHttpRequest(
-      clonedRequest,
-      requestBody,
-      requestTime
-    );
+
     if (this.trace) {
       let reqMessage = await this.getTraceMessageHttpRequest(
         clonedRequest,
@@ -506,12 +502,21 @@ export abstract class TBaseService {
       await this.processMaskArray(responseBody);
     } catch {}
     
-    let logResponseMessage = await this.getLogMessageHttpResponse(
-      clonedResponse,
-      responseBody,
-      responseTime
-    );
-    await this.logMessage(logRequestMessage, logResponseMessage);
+    if (this.log) {
+      let logRequestMessage = await this.getLogMessageHttpRequest(
+        clonedRequest,
+        requestBody,
+        requestTime
+      );
+
+      let logResponseMessage = await this.getLogMessageHttpResponse(
+        clonedResponse,
+        responseBody,
+        responseTime
+      );
+
+      await this.logMessage(logRequestMessage, logResponseMessage);
+    }
 
     this.lastHttpCall = { url: url, statusCode: response.status };
     if (this.trace) {
