@@ -2,7 +2,11 @@ import { bufferToString, decrypt, stringToBuffer, encrypt } from "./utils";
 
 export interface IQueueEnv {}
 export interface IBindingEnv {
-  service_log: any
+  service_log: any;
+  service_log_dev: any;
+  service_log_test: any;
+  service_log_stage: any;
+  service_log_main: any;
 }
 
 export interface IBaseServiceEnv extends IQueueEnv, IBindingEnv {
@@ -42,7 +46,9 @@ export abstract class TBaseService {
     this.INSTANCE = env.INSTANCE;
     this.log = env.LOG ? Number(env.LOG) : 0;
     this.version = version;
-    this.service_log = env.service_log;
+
+    const instanceLogKey = `service_log_${env.INSTANCE}` as keyof IBaseServiceEnv;
+    this.service_log = env[instanceLogKey] ?? env.service_log;
   }
 
   get trace(): number {
