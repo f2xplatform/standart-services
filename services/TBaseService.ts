@@ -18,7 +18,7 @@ export interface IBaseServiceEnv extends IQueueEnv, IBindingEnv {
   INSTANCE: "stage" | "main" | "test" | "dev";
   LOG: "0" | "1";
   EXCEPTION: "0" | "1";
-  CUSTOMER: string;
+  CUSTOMER?: string;
 }
 
 export abstract class TBaseService {
@@ -52,13 +52,15 @@ export abstract class TBaseService {
     this.log = env.LOG ? Number(env.LOG) : 0;
     this.version = version;
     this.service_log = env.service_log;
-    if (!env.CUSTOMER) {
-      throw new Error(`CUSTOMER env var is required for service "${name}"`);
-    }
-    this.customer = env.CUSTOMER;
+    this.customer = env.CUSTOMER ?? "";
   }
 
   protected initServiceSettings(bundle: TServiceSettingsBundle) {
+    if (!this.customer) {
+      throw new Error(
+        `CUSTOMER env var is required to initialize service settings for "${this.name}"`
+      );
+    }
     const entries = resolveServiceSettings(this.customer, bundle);
     this._serviceSettings = new Map(entries.map((entry) => [entry.key, entry.value]));
     this._serviceSettingsDebug = entries;
