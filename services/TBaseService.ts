@@ -1,9 +1,4 @@
 import { bufferToString, decrypt, stringToBuffer, encrypt } from "./utils";
-import {
-  resolveServiceSettings,
-  TServiceSettingEntry,
-  TServiceSettingsBundle,
-} from "./serviceSettings";
 
 export interface IQueueEnv {}
 export interface IBindingEnv {
@@ -18,7 +13,6 @@ export interface IBaseServiceEnv extends IQueueEnv, IBindingEnv {
   INSTANCE: "stage" | "main" | "test" | "dev";
   LOG: "0" | "1";
   EXCEPTION: "0" | "1";
-  CUSTOMER?: string;
 }
 
 export abstract class TBaseService {
@@ -31,10 +25,7 @@ export abstract class TBaseService {
   private _trace: number = 0;
   private _log: number = 0;
   private _exception: number = 0;
-  private _serviceSettings = new Map<string, unknown>();
-  private _serviceSettingsDebug: TServiceSettingEntry[] = [];
   abstract maskArray: Array<string>;
-  readonly customer: string;
   readonly INSTANCE: "stage" | "main" | "dev" | "test";
   protected version: string;
   protected lastServiceCall: { url: string; statusCode: number };
@@ -52,31 +43,6 @@ export abstract class TBaseService {
     this.log = env.LOG ? Number(env.LOG) : 0;
     this.version = version;
     this.service_log = env.service_log;
-    this.customer = env.CUSTOMER ?? "";
-  }
-
-  protected initServiceSettings(bundle: TServiceSettingsBundle) {
-    if (!this.customer) {
-      throw new Error(
-        `CUSTOMER env var is required to initialize service settings for "${this.name}"`
-      );
-    }
-    const entries = resolveServiceSettings(this.customer, bundle);
-    this._serviceSettings = new Map(entries.map((entry) => [entry.key, entry.value]));
-    this._serviceSettingsDebug = entries;
-  }
-
-  getSetting<T = unknown>(key: string): T {
-    if (!this._serviceSettings.has(key)) {
-      throw new Error(
-        `Service setting "${key}" is not initialized for service "${this.name}" (customer "${this.customer}")`
-      );
-    }
-    return this._serviceSettings.get(key) as T;
-  }
-
-  getAllServiceSettings(): TServiceSettingEntry[] {
-    return this._serviceSettingsDebug.map((entry) => ({ ...entry }));
   }
 
   get trace(): number {

@@ -28,19 +28,5 @@
         }
       ]
     }
-  ],
-  "service_settings_id": [
-    {
-      "default": [
-        {
-          "descr": "Проверка на получение всех service settings",
-          "defaults": {},
-          "result": {
-            "status": 200,
-            "include": "settings"
-          }
-        }
-      ]
-    }
   ]
 }
