@@ -116,6 +116,15 @@ export abstract class THttpService extends TBaseService {
           func: this.type === "refactored" ? this.getHttpRequestParams : this.getRequestParams,
           test: testSettings["request_params_id"],
         },
+        {
+          id: "service_settings_id",
+          descr: "Получение всех service settings (debug)",
+          pathname: "/std/service-settings",
+          method: "get",
+          func: this.getAllServiceSettingsStd,
+          category: "standart",
+          test: testSettings["service_settings_id"],
+        },
       ],
     ];
   }
@@ -150,6 +159,18 @@ export abstract class THttpService extends TBaseService {
       let message = await this.getTraceMessageHttpRequest(clonedRequest, requestBody);
       await this.traceMessage(message, "service_in");
     }
+  }
+
+  protected getAllServiceSettingsStd(env: IHttpServiceEnv) {
+    return {
+      responseStatus: 200,
+      responseError: [],
+      responseResult: {
+        name: this.name,
+        customer: this.customer || null,
+        settings: this.getAllServiceSettings(),
+      },
+    };
   }
 
   protected async getAllRequests(env: IHttpServiceEnv) {
