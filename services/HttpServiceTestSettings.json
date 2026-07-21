@@ -28,5 +28,19 @@
         }
       ]
     }
+  ],
+  "feature_config_id": [
+    {
+      "default": [
+        {
+          "descr": "Получение текущих feature-config настроек",
+          "defaults": {},
+          "result": {
+            "status": 200,
+            "include": "settings"
+          }
+        }
+      ]
+    }
   ]
 }

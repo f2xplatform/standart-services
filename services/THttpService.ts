@@ -44,12 +44,22 @@ export abstract class THttpService extends TBaseService {
   abstract initMaskedArray()
   protected varsEnvArray: Array<string>;
   protected type: string;
+  protected platformFeatureConfigModuleNs: Record<string, unknown> | null = null;
 
-  constructor(env: IHttpServiceEnv, name: string, version: string, type?: string) {
+  constructor(
+    env: IHttpServiceEnv,
+    name: string,
+    version: string,
+    type?: string,
+    platformFeatureConfigModuleNs?: Record<string, unknown>
+  ) {
     super(env, name, version);
     // this.q_access = env.q_access;
     this.requestUrlPatterns = [] as Array<TRequestUrlPattern>;
-    if(type) {
+    if (platformFeatureConfigModuleNs) {
+      this.platformFeatureConfigModuleNs = platformFeatureConfigModuleNs;
+    }
+    if (type) {
       this.type = type;
     }
   }
@@ -115,6 +125,15 @@ export abstract class THttpService extends TBaseService {
           method: "get",
           func: this.type === "refactored" ? this.getHttpRequestParams : this.getRequestParams,
           test: testSettings["request_params_id"],
+        },
+        {
+          id: "feature_config_id",
+          descr: "Получение текущих service settings",
+          pathname: "/std/feature-config",
+          method: "get",
+          func: this.getFeatureConfig,
+          test: testSettings["feature_config_id"],
+          category: "standart",
         },
       ],
     ];
@@ -186,6 +205,29 @@ export abstract class THttpService extends TBaseService {
       },
     };
     return result;
+  }
+
+  protected async getFeatureConfig(env: IHttpServiceEnv) {
+    if (!this.platformFeatureConfigModuleNs) {
+      return {
+        responseStatus: 404,
+        responseError: {
+          errorCode: "NOT_FOUND",
+          errorText: "Platform feature config not available",
+        },
+      };
+    }
+
+    return {
+      responseStatus: 200,
+      responseError: [],
+      responseResult: {
+        service: this.name,
+        instance: env.INSTANCE,
+        version: this.version,
+        settings: Object.fromEntries(Object.entries(this.platformFeatureConfigModuleNs)),
+      },
+    };
   }
 
   protected getRequestParams(
