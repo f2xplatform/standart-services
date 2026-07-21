@@ -37,7 +37,7 @@
           "defaults": {},
           "result": {
             "status": 200,
-            "include": "/std/feature-config"
+            "include": "settings"
           }
         }
       ]
