@@ -135,7 +135,7 @@ export abstract class THttpService<
       ...[
         {
           id: "all_requests_id",
-          descr: "Получение описания поддерживаемых запросов",
+          descr: "List supported request descriptions",
           pathname: "/std/requests",
           method: "get",
           func: this.getAllRequests,
@@ -143,7 +143,7 @@ export abstract class THttpService<
         },
         {
           id: "request_params_id",
-          descr: "Получение параметров запроса",
+          descr: "Get request parameters",
           pathname: "/std/requests/:req_id",
           method: "get",
           func: this.type === "refactored" ? this.getHttpRequestParams : this.getRequestParams,
@@ -151,7 +151,7 @@ export abstract class THttpService<
         },
         {
           id: "feature_config_id",
-          descr: "Получение текущего feature-config",
+          descr: "Get current feature-config",
           pathname: "/std/feature-config",
           method: "get",
           func: this.getFeatureConfig,
