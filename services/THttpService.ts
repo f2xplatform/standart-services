@@ -1,5 +1,11 @@
 import { IBaseServiceEnv, IBindingEnv, TBaseService } from "./TBaseService";
 import * as testSettings from "./HttpServiceTestSettings.json";
+import {
+  getConfigValue,
+  snapshotConfig,
+  type FeatureConfigGetResult,
+  type FeatureConfigRegistry,
+} from "./featureConfig";
 
 export const SUB_REQUEST_HEADERS_ARRAY = [
   "cf-connecting-ip",
@@ -36,7 +42,9 @@ export type TRequestUrlPattern = {
   test?: {};
 };
 
-export abstract class THttpService extends TBaseService {
+export abstract class THttpService<
+  R extends FeatureConfigRegistry = FeatureConfigRegistry,
+> extends TBaseService {
   protected requestHttpParams = {} as TRequestHttpParams;
   private _requestUrlPatterns: Array<TRequestUrlPattern> =
     {} as Array<TRequestUrlPattern>;
@@ -44,24 +52,39 @@ export abstract class THttpService extends TBaseService {
   abstract initMaskedArray()
   protected varsEnvArray: Array<string>;
   protected type: string;
-  protected platformFeatureConfigModuleNs: Record<string, unknown> | null = null;
+  protected featureConfigRegistry: R | null = null;
+  /** Request customer id for feature-config overrides; empty → use `default` modules only. */
+  protected customer: string = '';
 
   constructor(
     env: IHttpServiceEnv,
     name: string,
     version: string,
     type?: string,
-    platformFeatureConfigModuleNs?: Record<string, unknown>
+    featureConfigRegistry?: R | null
   ) {
     super(env, name, version);
     // this.q_access = env.q_access;
     this.requestUrlPatterns = [] as Array<TRequestUrlPattern>;
-    if (platformFeatureConfigModuleNs) {
-      this.platformFeatureConfigModuleNs = platformFeatureConfigModuleNs;
-    }
+    this.featureConfigRegistry = featureConfigRegistry ?? null;
     if (type) {
       this.type = type;
     }
+  }
+
+  /**
+   * Override in PA / mobile / trading after pa_id or trading org is known.
+   * Default: empty customer (resolve uses only `default` suffix modules).
+   */
+  protected resolveRequestCustomer(): string {
+    return '';
+  }
+
+  getConfig<K extends keyof R & string>(key: K): FeatureConfigGetResult<R, K> {
+    if (!this.featureConfigRegistry) {
+      throw new Error('Platform feature config not available');
+    }
+    return getConfigValue(this.featureConfigRegistry, this.customer, key);
   }
 
   async callHttp(
@@ -112,7 +135,7 @@ export abstract class THttpService extends TBaseService {
       ...[
         {
           id: "all_requests_id",
-          descr: "Получение описания поддерживаемых запросов",
+          descr: "List supported request descriptions",
           pathname: "/std/requests",
           method: "get",
           func: this.getAllRequests,
@@ -120,7 +143,7 @@ export abstract class THttpService extends TBaseService {
         },
         {
           id: "request_params_id",
-          descr: "Получение параметров запроса",
+          descr: "Get request parameters",
           pathname: "/std/requests/:req_id",
           method: "get",
           func: this.type === "refactored" ? this.getHttpRequestParams : this.getRequestParams,
@@ -128,7 +151,7 @@ export abstract class THttpService extends TBaseService {
         },
         {
           id: "feature_config_id",
-          descr: "Получение текущих service settings",
+          descr: "Get current feature-config",
           pathname: "/std/feature-config",
           method: "get",
           func: this.getFeatureConfig,
@@ -208,7 +231,7 @@ export abstract class THttpService extends TBaseService {
   }
 
   protected async getFeatureConfig(env: IHttpServiceEnv) {
-    if (!this.platformFeatureConfigModuleNs) {
+    if (!this.featureConfigRegistry) {
       return {
         responseStatus: 404,
         responseError: {
@@ -225,7 +248,8 @@ export abstract class THttpService extends TBaseService {
         service: this.name,
         instance: env.INSTANCE,
         version: this.version,
-        settings: Object.fromEntries(Object.entries(this.platformFeatureConfigModuleNs)),
+        customer: this.customer,
+        settings: snapshotConfig(this.featureConfigRegistry),
       },
     };
   }
