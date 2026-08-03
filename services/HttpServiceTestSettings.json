@@ -3,7 +3,7 @@
     {
       "default": [
         {
-          "descr": "Check that the standard method works correctly.",
+          "descr": "Check that the standard method works correctly",
           "defaults": {
             "url": { "req_id": "request_params_id" }
           },
@@ -19,7 +19,7 @@
     {
       "default": [
         {
-          "descr": "Check that the description of supported requests is returned.",
+          "descr": "Check that the description of supported requests is returned",
           "defaults": {},
           "result": {
             "status": 200,
@@ -33,7 +33,7 @@
     {
       "default": [
         {
-          "descr": "Get the current feature-config settings.",
+          "descr": "Get the current feature-config settings",
           "defaults": {},
           "result": {
             "status": 200,
