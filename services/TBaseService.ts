@@ -12,7 +12,7 @@ export interface IBaseServiceEnv extends IQueueEnv, IBindingEnv {
   TRACE: "0" | "1" | "2";
   INSTANCE: "stage" | "main" | "test" | "dev";
   LOG: "0" | "1";
-  EXCEPTION: "0" | "1"
+  EXCEPTION: "0" | "1";
 }
 
 export abstract class TBaseService {
