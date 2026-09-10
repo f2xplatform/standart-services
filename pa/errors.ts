@@ -8,6 +8,16 @@ export function generateStateInvalidError(): any {
   };
 }
 
+export function generateBadParamsError(errorText: string): any {
+  return {
+    responseStatus: 400,
+    responseError: {
+      errorCode: "BAD PARAMS",
+      errorText,
+    },
+  };
+}
+
 export function generateAuthError(): any {
   return {
     responseStatus: 401,
