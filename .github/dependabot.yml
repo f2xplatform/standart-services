@@ -1,0 +1,10 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    schedule:
+        interval: "daily"
+    directory: "/"
+    target-branch: "main"
+    cooldown:
+      default-days: 7
